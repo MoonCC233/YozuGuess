@@ -9,7 +9,7 @@ import { GAME_TITLES } from './types.js';
 export const MAX_GUESSES = 8;
 
 // 数值型属性的"接近"阈值
-const AGE_CLOSE_RANGE = 3;
+const BAKUSEN_CLOSE_RANGE = 3;
 const RANK_CLOSE_RANGE = 20; // 角色位次接近阈值
 const YEAR_CLOSE_RANGE = 3; // 作品年份接近阈值
 
@@ -46,7 +46,7 @@ export function compareGuess(guess: Character, target: Character): GuessFeedback
       hair: textAttr(guess.hair, target.hair),
       eyes: textAttr(guess.eyes, target.eyes),
       titleYear: numberAttr(GAME_TITLES[guess.title].year, GAME_TITLES[target.title].year, YEAR_CLOSE_RANGE),
-      age: numberAttr(guess.age, target.age, AGE_CLOSE_RANGE),
+      bakusen: numberAttr(guess.bakusen, target.bakusen, BAKUSEN_CLOSE_RANGE),
     },
   };
 }
@@ -75,7 +75,7 @@ export function hiddenGuess(feedback: GuessFeedback): {
       hair: hide(feedback.attributes.hair),
       eyes: hide(feedback.attributes.eyes),
       titleYear: hide(feedback.attributes.titleYear),
-      age: hide(feedback.attributes.age),
+      bakusen: hide(feedback.attributes.bakusen),
     },
   };
 }

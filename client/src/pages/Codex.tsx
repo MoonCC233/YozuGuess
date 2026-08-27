@@ -100,7 +100,7 @@ export default function Codex() {
               <div className="codex-card-meta">
                 <span>位次 {c.rank}</span>
                 <span>·</span>
-                <span>{c.age}岁</span>
+                <span>爆闪 {c.bakusen}</span>
               </div>
               <div className="codex-card-attrs">
                 <span>{c.hair}发</span>
@@ -129,7 +129,7 @@ export default function Codex() {
             <table className="codex-detail-table">
               <tbody>
                 <tr><th>{t('rules.columns.rank')}</th><td>{selected.rank}</td></tr>
-                <tr><th>{t('rules.columns.age')}</th><td>{selected.age}</td></tr>
+                <tr><th>{t('rules.columns.bakusen')}</th><td>{selected.bakusen}</td></tr>
                 <tr><th>{t('rules.columns.hair')}</th><td>{selected.hair}</td></tr>
                 <tr><th>{t('rules.columns.eyes')}</th><td>{selected.eyes}</td></tr>
                 <tr><th>{t('rules.columns.titleYear')}</th><td>{GAME_TITLES[selected.title].year}</td></tr>

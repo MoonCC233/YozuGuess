@@ -73,7 +73,7 @@ export interface ReplayRecord extends ReplaySummary {
     nameJp: string;
     title: string;
     rank: number;
-    age: number;
+    bakusen: number;
     hair: string;
     eyes: string;
   } | null;

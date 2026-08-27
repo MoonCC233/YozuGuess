@@ -7,7 +7,7 @@ function make(partial: Partial<Character> & Pick<Character, 'id' | 'name'>): Cha
     nameJp: '',
     title: 'sannabitch',
     rank: 1,
-    age: 16,
+    bakusen: 16,
     hair: '黑',
     eyes: '蓝',
     isMain: true,
@@ -20,7 +20,7 @@ const target = make({
   name: '目标',
   title: 'sannabitch',
   rank: 1,
-  age: 16,
+  bakusen: 16,
   hair: '黑',
   eyes: '蓝',
 });
@@ -48,18 +48,18 @@ describe('compareGuess', () => {
     expect(fb.attributes.eyes.level).toBe('wrong');
   });
 
-  it('age within close range yields close with direction hint', () => {
-    const other = make({ id: 2, name: '其他', age: 18 }); // diff 2 <= 3
+  it('bakusen within close range yields close with direction hint', () => {
+    const other = make({ id: 2, name: '其他', bakusen: 18 }); // diff 2 <= 3
     const fb = compareGuess(other, target);
-    expect(fb.attributes.age.level).toBe('close');
-    expect(fb.attributes.age.hint).toBe('lower'); // target younger -> guess should go lower
+    expect(fb.attributes.bakusen.level).toBe('close');
+    expect(fb.attributes.bakusen.hint).toBe('lower'); // target fewer -> guess should go lower
   });
 
-  it('age far outside range yields wrong with direction hint', () => {
-    const other = make({ id: 2, name: '其他', age: 30 });
+  it('bakusen far outside range yields wrong with direction hint', () => {
+    const other = make({ id: 2, name: '其他', bakusen: 30 });
     const fb = compareGuess(other, target);
-    expect(fb.attributes.age.level).toBe('wrong');
-    expect(fb.attributes.age.hint).toBe('lower');
+    expect(fb.attributes.bakusen.level).toBe('wrong');
+    expect(fb.attributes.bakusen.hint).toBe('lower');
   });
 
   it('rank within close range yields close with direction hint', () => {
@@ -79,13 +79,13 @@ describe('compareGuess', () => {
 
 describe('hiddenGuess', () => {
   it('strips values but keeps level and hint', () => {
-    const other = make({ id: 2, name: '其他', age: 30 });
+    const other = make({ id: 2, name: '其他', bakusen: 30 });
     const hidden = hiddenGuess(compareGuess(other, target));
     expect(hidden.hidden).toBe(true);
     expect(hidden.correct).toBe(false);
-    expect((hidden.attributes.age as any).value).toBeUndefined();
-    expect(hidden.attributes.age.level).toBe('wrong');
-    expect(hidden.attributes.age.hint).toBe('lower');
+    expect((hidden.attributes.bakusen as any).value).toBeUndefined();
+    expect(hidden.attributes.bakusen.level).toBe('wrong');
+    expect(hidden.attributes.bakusen.hint).toBe('lower');
   });
 });
 

@@ -41,8 +41,7 @@ export type EyeColor =
   | '异色';
 
 /** 角色数据模型
- * 猜谜维度：角色名(name, 行标签) / 角色位次(rank) / 发色(hair) / 瞳色(eyes) / 作品年份(titleYear) / 年龄(age)
- * 注：原需求中的「爆闪次数」为成人向内容，未予实现；第 6 维度以「年龄」替代。
+ * 猜谜维度：角色名(name, 行标签) / 角色位次(rank) / 发色(hair) / 瞳色(eyes) / 作品年份(titleYear) / 爆闪次数(bakusen)
  */
 export interface Character {
   id: number;
@@ -50,7 +49,7 @@ export interface Character {
   nameJp: string; // 日文名
   title: GameTitle;
   rank: number; // 角色位次（数据集序号占位，可后续替换为真实位次）
-  age: number;
+  bakusen: number; // 爆闪次数（成人向名场面计数，占位数据）
   hair: HairColor;
   eyes: EyeColor;
   isMain: boolean; // 是否女主角/主要可猜角色
@@ -77,7 +76,7 @@ export interface GuessFeedback {
     hair: AttributeFeedback; // 发色（文本型）
     eyes: AttributeFeedback; // 瞳色（文本型）
     titleYear: AttributeFeedback; // 作品年份（数值型）
-    age: AttributeFeedback; // 年龄（数值型）
+    bakusen: AttributeFeedback; // 爆闪次数（数值型）
   };
 }
 

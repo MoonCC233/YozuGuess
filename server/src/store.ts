@@ -73,7 +73,7 @@ export function answerView(target: import('@yozu/shared').Character) {
     nameJp: target.nameJp,
     title: target.title,
     rank: target.rank,
-    age: target.age,
+    bakusen: target.bakusen,
     hair: target.hair,
     eyes: target.eyes,
   };

@@ -44,7 +44,7 @@ export default function GuessBoard({ guesses }: { guesses: GuessFeedback[] }) {
     t('rules.columns.hair'),
     t('rules.columns.eyes'),
     t('rules.columns.titleYear'),
-    t('rules.columns.age'),
+    t('rules.columns.bakusen'),
   ];
   return (
     <div className="game-table-wrap">
@@ -68,7 +68,7 @@ export default function GuessBoard({ guesses }: { guesses: GuessFeedback[] }) {
               <Cell attr={g.attributes.hair} label={columns[1]} />
               <Cell attr={g.attributes.eyes} label={columns[2]} />
               <Cell attr={g.attributes.titleYear} label={columns[3]} />
-              <Cell attr={g.attributes.age} label={columns[4]} />
+              <Cell attr={g.attributes.bakusen} label={columns[4]} />
             </tr>
           ))}
         </tbody>

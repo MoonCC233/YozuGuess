@@ -37,7 +37,7 @@ export default function Rules() {
           <p>完全一致才显示绿色；否则灰色。</p>
         </article>
         <article className="rule-panel">
-          <div className="rule-panel-title"><Target size={18} /> {t('rules.columns.rank')} / {t('rules.columns.titleYear')} / {t('rules.columns.age')}</div>
+          <div className="rule-panel-title"><Target size={18} /> {t('rules.columns.rank')} / {t('rules.columns.titleYear')} / {t('rules.columns.bakusen')}</div>
           <p>数值相差在阈值内显示黄色并带方向箭头；差距过大显示灰色。</p>
         </article>
       </div>
