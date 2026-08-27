@@ -45,7 +45,7 @@ router.get('/characters', (_req, res) => {
 });
 
 // 数据图鉴：返回全部角色完整设定
-router.get('/codex', (_req, res) => {
+router.get('/database', (_req, res) => {
   res.json(getEnabledCharacters());
 });
 

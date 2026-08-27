@@ -23,7 +23,7 @@ const navItems = [
   { to: '/single', icon: Gamepad2, key: 'single' as const },
   { to: '/daily', icon: CalendarDays, key: 'daily' as const },
   { to: '/multi', icon: Users, key: 'multi' as const },
-  { to: '/codex', icon: BookOpen, key: 'codex' as const },
+  { to: '/database', icon: BookOpen, key: 'codex' as const },
   { to: '/stats', icon: BarChart3, key: 'stats' as const },
   { to: '/leaderboard', icon: Trophy, key: 'leaderboard' as const },
   { to: '/rules', icon: BookOpen, key: 'rules' as const },
@@ -107,7 +107,7 @@ export default function App() {
           <Route path="/daily" element={<Daily />} />
           <Route path="/multi" element={<MultiLobby />} />
           <Route path="/multi/:code" element={<MultiRoom />} />
-          <Route path="/codex" element={<Codex />} />
+          <Route path="/database" element={<Codex />} />
           <Route path="/stats" element={<Stats />} />
           <Route path="/replay/:id" element={<Replay />} />
           <Route path="/leaderboard" element={<Leaderboard />} />

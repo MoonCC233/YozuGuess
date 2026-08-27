@@ -50,5 +50,5 @@ export const api = {
   getReplay: (id: string) => fetch(`${http.defaults.baseURL}/replays/${id}`).then((r) => json<import('./types').ReplayRecord>(r)),
   statsDetail: () => fetch(`${http.defaults.baseURL}/stats/detail`).then((r) => json<import('./types').StatsDetail>(r)),
 
-  listCodex: () => fetch(`${http.defaults.baseURL}/codex`).then((r) => json<import('./types').Character[]>(r)),
+  listCodex: () => fetch(`${http.defaults.baseURL}/database`).then((r) => json<import('./types').Character[]>(r)),
 };
