@@ -48,7 +48,7 @@ export interface Character {
   name: string; // 中文名
   nameJp: string; // 日文名
   title: GameTitle;
-  rank: number; // 角色位次（数据集序号占位，可后续替换为真实位次）
+  rank: string; // 角色位次（女主角为数字字符串如 '1'；次要角色为 '次要'）
   bakusen: number; // 爆闪次数（成人向名场面计数，占位数据）
   hair: HairColor;
   eyes: EyeColor;

@@ -6,7 +6,7 @@ function make(partial: Partial<Character> & Pick<Character, 'id' | 'name'>): Cha
   return {
     nameJp: '',
     title: 'sannabitch',
-    rank: 1,
+    rank: '1',
     bakusen: 16,
     hair: '黑',
     eyes: '蓝',
@@ -19,7 +19,7 @@ const target = make({
   id: 1,
   name: '目标',
   title: 'sannabitch',
-  rank: 1,
+  rank: '1',
   bakusen: 16,
   hair: '黑',
   eyes: '蓝',
@@ -63,7 +63,7 @@ describe('compareGuess', () => {
   });
 
   it('rank within close range yields close with direction hint', () => {
-    const other = make({ id: 2, name: '其他', rank: 15 }); // diff 14 <= 20
+    const other = make({ id: 2, name: '其他', rank: '15' }); // diff 14 <= 20
     const fb = compareGuess(other, target);
     expect(fb.attributes.rank.level).toBe('close');
     expect(fb.attributes.rank.hint).toBe('lower');

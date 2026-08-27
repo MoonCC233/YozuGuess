@@ -33,6 +33,16 @@ function numberAttr(
   };
 }
 
+/** 位次属性：字符串形式。女主角为数字字符串（如 '1'），可数值比较并带接近提示；
+ * 次要角色为 '次要'，按文本精确匹配处理。 */
+function rankAttr(guessVal: string, targetVal: string): AttributeFeedback {
+  const gNum = Number(guessVal);
+  const tNum = Number(targetVal);
+  const bothNumeric = !Number.isNaN(gNum) && !Number.isNaN(tNum) && guessVal.trim() !== '' && targetVal.trim() !== '';
+  if (bothNumeric) return numberAttr(gNum, tNum, RANK_CLOSE_RANGE);
+  return textAttr(guessVal, targetVal);
+}
+
 /** 逐属性对比猜测角色与目标角色，产出反馈 */
 export function compareGuess(guess: Character, target: Character): GuessFeedback {
   const correct = guess.id === target.id;
@@ -42,7 +52,7 @@ export function compareGuess(guess: Character, target: Character): GuessFeedback
     correct,
     attributes: {
       title: textAttr(guess.title, target.title),
-      rank: numberAttr(guess.rank, target.rank, RANK_CLOSE_RANGE),
+      rank: rankAttr(guess.rank, target.rank),
       hair: textAttr(guess.hair, target.hair),
       eyes: textAttr(guess.eyes, target.eyes),
       titleYear: numberAttr(GAME_TITLES[guess.title].year, GAME_TITLES[target.title].year, YEAR_CLOSE_RANGE),
