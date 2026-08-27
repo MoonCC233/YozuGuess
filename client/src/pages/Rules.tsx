@@ -33,7 +33,7 @@ export default function Rules() {
 
       <div className="rule-panels">
         <article className="rule-panel">
-          <div className="rule-panel-title"><Target size={18} /> {t('rules.columns.title')} / {t('rules.columns.hair')} / {t('rules.columns.eyes')}</div>
+          <div className="rule-panel-title"><Target size={18} /> {t('rules.columns.title')} / {t('rules.columns.hair')} / {t('rules.columns.eyes')} / {t('rules.columns.cv')}</div>
           <p>完全一致才显示绿色；否则灰色。</p>
         </article>
         <article className="rule-panel">

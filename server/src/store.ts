@@ -76,6 +76,7 @@ export function answerView(target: import('@yozu/shared').Character) {
     bakusen: target.bakusen,
     hair: target.hair,
     eyes: target.eyes,
+    cv: target.cv,
   };
 }
 

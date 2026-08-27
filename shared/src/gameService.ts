@@ -57,6 +57,7 @@ export function compareGuess(guess: Character, target: Character): GuessFeedback
       eyes: textAttr(guess.eyes, target.eyes),
       titleYear: numberAttr(GAME_TITLES[guess.title].year, GAME_TITLES[target.title].year, YEAR_CLOSE_RANGE),
       bakusen: numberAttr(guess.bakusen, target.bakusen, BAKUSEN_CLOSE_RANGE),
+      cv: textAttr(guess.cv, target.cv),
     },
   };
 }
@@ -86,6 +87,7 @@ export function hiddenGuess(feedback: GuessFeedback): {
       eyes: hide(feedback.attributes.eyes),
       titleYear: hide(feedback.attributes.titleYear),
       bakusen: hide(feedback.attributes.bakusen),
+      cv: hide(feedback.attributes.cv),
     },
   };
 }

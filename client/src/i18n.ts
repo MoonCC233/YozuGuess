@@ -22,7 +22,7 @@ const resources = {
         arrow: '箭头 · 调整方向', arrowText: '角色位次、作品年份、爆闪次数应更高或更低',
         columns: {
           title: '作品', rank: '位次', bakusen: '爆闪次数', hair: '发色', eyes: '瞳色',
-          titleYear: '作品年份',
+          titleYear: '作品年份', cv: '声优',
         },
       },
       single: {
@@ -87,7 +87,7 @@ const resources = {
         arrow: 'Arrows · Direction', arrowText: 'Rank, title year, and bakusen count should be higher or lower',
         columns: {
           title: 'Title', rank: 'Rank', bakusen: 'Bakusen', hair: 'Hair', eyes: 'Eyes',
-          titleYear: 'Title Year',
+          titleYear: 'Title Year', cv: 'CV',
         },
       },
       single: {
@@ -152,7 +152,7 @@ const resources = {
         arrow: '矢印 · 方向', arrowText: '位次・作品年・爆闪次数はより高いか低い',
         columns: {
           title: '作品', rank: '位次', bakusen: '爆闪次数', hair: '髪色', eyes: '瞳色',
-          titleYear: '作品年',
+          titleYear: '作品年', cv: '声優',
         },
       },
       single: {

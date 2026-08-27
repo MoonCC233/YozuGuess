@@ -41,7 +41,7 @@ export type EyeColor =
   | '异色';
 
 /** 角色数据模型
- * 猜谜维度：角色名(name, 行标签) / 角色位次(rank) / 发色(hair) / 瞳色(eyes) / 作品年份(titleYear) / 爆闪次数(bakusen)
+ * 猜谜维度：角色名(name, 行标签) / 角色位次(rank) / 发色(hair) / 瞳色(eyes) / 作品年份(titleYear) / 爆闪次数(bakusen) / 声优(cv)
  */
 export interface Character {
   id: number;
@@ -52,6 +52,7 @@ export interface Character {
   bakusen: number; // 爆闪次数（成人向名场面计数，占位数据）
   hair: HairColor;
   eyes: EyeColor;
+  cv: string; // 声优（配音演员），未知时为 '未知'
   isMain: boolean; // 是否女主角/主要可猜角色
 }
 
@@ -77,6 +78,7 @@ export interface GuessFeedback {
     eyes: AttributeFeedback; // 瞳色（文本型）
     titleYear: AttributeFeedback; // 作品年份（数值型）
     bakusen: AttributeFeedback; // 爆闪次数（数值型）
+    cv: AttributeFeedback; // 声优（文本型）
   };
 }
 

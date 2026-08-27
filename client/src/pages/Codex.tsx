@@ -101,6 +101,8 @@ export default function Codex() {
                 <span>位次 {c.rank}</span>
                 <span>·</span>
                 <span>爆闪 {c.bakusen}</span>
+                <span>·</span>
+                <span>声优 {c.cv}</span>
               </div>
               <div className="codex-card-attrs">
                 <span>{c.hair}发</span>
@@ -133,6 +135,7 @@ export default function Codex() {
                 <tr><th>{t('rules.columns.hair')}</th><td>{selected.hair}</td></tr>
                 <tr><th>{t('rules.columns.eyes')}</th><td>{selected.eyes}</td></tr>
                 <tr><th>{t('rules.columns.titleYear')}</th><td>{GAME_TITLES[selected.title].year}</td></tr>
+                <tr><th>{t('rules.columns.cv')}</th><td>{selected.cv}</td></tr>
               </tbody>
             </table>
           </div>

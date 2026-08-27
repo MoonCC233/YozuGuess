@@ -10,6 +10,7 @@ function make(partial: Partial<Character> & Pick<Character, 'id' | 'name'>): Cha
     bakusen: 16,
     hair: '黑',
     eyes: '蓝',
+    cv: '未知',
     isMain: true,
     ...partial,
   } as Character;
@@ -23,6 +24,7 @@ const target = make({
   bakusen: 16,
   hair: '黑',
   eyes: '蓝',
+  cv: '未知',
 });
 
 describe('compareGuess', () => {
