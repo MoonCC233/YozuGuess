@@ -1,7 +1,7 @@
-import { createApp } from './app.js';
 import { config } from './config.js';
+import { createServerBundle } from './server.js';
 
-const app = createApp();
-app.listen(config.port, () => {
+const { http } = createServerBundle();
+http.listen(config.port, () => {
   console.log(`[yozu] server listening on http://localhost:${config.port}`);
 });

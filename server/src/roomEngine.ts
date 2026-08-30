@@ -392,8 +392,8 @@ export function applyGuess(
   const player = room.players.find((p) => p.key === playerKey);
   if (!player) return fail('PLAYER_NOT_FOUND');
   if (player.spectator) return fail('SPECTATOR_CANNOT_GUESS');
-  if (player.done) return fail('ALREADY_DONE');
   if (player.guesses.length >= MAX_GUESSES) return fail('GUESS_LIMIT_REACHED');
+  if (player.done) return fail('ALREADY_DONE');
   if (player.guesses.some((g) => g.characterId === characterId)) return fail('DUPLICATE_GUESS');
 
   const guessed = getCharacter(characterId);
