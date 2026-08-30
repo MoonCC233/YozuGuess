@@ -1,0 +1,14 @@
+{
+  "name": "yozuguess",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.20.0",
+  "scripts": {
+    "build": "pnpm --filter @yozu/shared build && pnpm --filter @yozu/server build && pnpm --filter @yozu/client build",
+    "dev": "pnpm --filter @yozu/shared build && pnpm --parallel --filter @yozu/server --filter @yozu/client dev",
+    "start": "pnpm --filter @yozu/server start",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck"
+  }
+}
