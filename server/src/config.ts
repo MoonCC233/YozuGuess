@@ -21,4 +21,10 @@ export const config = {
   roomTtlMs: Number(process.env.ROOM_TTL_MS ?? 60 * 60 * 1000),
   /** 内存中同时保留的最大房间数 */
   maxRooms: Number(process.env.MAX_ROOMS ?? 500),
+  /** SQLite 数据库文件路径（相对 `server/`），`:memory:` 表示内存库 */
+  dbPath: process.env.DB_PATH ?? 'data/yozu.db',
+  /** 登录会话有效期（毫秒），默认 30 天 */
+  authSessionTtlMs: Number(process.env.AUTH_SESSION_TTL_MS ?? 30 * 24 * 60 * 60 * 1000),
+  /** 会话 cookie 是否只走 HTTPS，生产环境建议开启 */
+  authCookieSecure: process.env.AUTH_COOKIE_SECURE === 'true',
 } as const;
