@@ -64,9 +64,39 @@ export function Rules() {
         </p>
       </div>
 
+      <div className="card">
+        <h2>联机对战</h2>
+        <p>
+          在大厅建房拿到 <strong>5 位房间号</strong>分享给朋友，或直接输入房间号加入，也可以勾选旁观只看不猜。
+          房主在两人就位后开局，全房同一个答案，每小局默认 <strong>2 分钟</strong>，结算 8 秒后自动进入下一小局。
+          赛制可选 BO1 / BO3 / BO5 / BO7，先拿到过半小局胜利即赢下整场；打满全部小局则按总比分判定。
+        </p>
+        <dl className="dims">
+          <dt>有人猜中</dt>
+          <dd>最早猜中的人拿下这一小局</dd>
+          <dt>无人猜中</dt>
+          <dd>
+            按接近程度判定：取单次猜测的最高得分（绿色每个 2 分、黄色每个 1 分），
+            得分相同则猜测次数少者胜
+          </dd>
+          <dt>判平局</dt>
+          <dd>接近程度与次数完全持平、双方都没蒙对任何属性、或一次都没猜，双方均不得分</dd>
+          <dt>对手离开</dt>
+          <dd>留下的人直接赢下整场</dd>
+        </dl>
+        <p>
+          小局进行中你<strong>只能看到对手每次猜测的颜色</strong>，角色名与属性值显示为「？？？」，
+          结算后才互相揭示完整反馈。挂机不参与接近程度比较，所以不猜不会白捡胜利。
+          断线后回到同一房间会自动认领原座位，比分和本小局已提交的猜测都能恢复。
+        </p>
+      </div>
+
       <div className="actions">
         <Link className="btn btn-primary" to="/">
           去玩一局
+        </Link>
+        <Link className="btn" to="/multi">
+          联机对战
         </Link>
         <Link className="btn" to="/codex">
           查看图鉴
