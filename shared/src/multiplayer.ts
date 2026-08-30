@@ -107,7 +107,8 @@ export type RoomErrorCode =
   | 'DUPLICATE_GUESS'
   | 'CHARACTER_NOT_FOUND'
   | 'RATE_LIMITED'
-  | 'TOO_MANY_ROOMS';
+  | 'TOO_MANY_ROOMS'
+  | 'AUTH_REQUIRED';
 
 /** 房间人数上限（玩家，不含旁观） */
 export const MAX_ROOM_PLAYERS = 8;

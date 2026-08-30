@@ -14,6 +14,7 @@ import { rateLimit } from './rateLimit.js';
 import { config } from './config.js';
 import {
   changePassword,
+  changeUsername,
   getHistory,
   getLeaderboard,
   getStats,
@@ -58,6 +59,10 @@ const credentialsSchema = z.object({
 const passwordChangeSchema = z.object({
   currentPassword: z.string().min(1).max(128),
   newPassword: z.string().min(1).max(128),
+});
+
+const usernameChangeSchema = z.object({
+  username: z.string().min(1).max(32),
 });
 
 /** 账号接口配额单独收紧，避免被拿来撞库 */
@@ -236,6 +241,20 @@ api.post('/auth/password', authLimit, requireUser, (req, res) => {
     return;
   }
   res.json({ ok: true });
+});
+
+api.post('/auth/username', authLimit, requireUser, (req, res) => {
+  const parsed = usernameChangeSchema.safeParse(req.body ?? {});
+  if (!parsed.success) {
+    res.status(400).json({ code: 'INVALID_PAYLOAD' });
+    return;
+  }
+  const renamed = changeUsername(req.user!.id, parsed.data.username);
+  if (!renamed.ok) {
+    res.status(ACCOUNT_STATUS[renamed.error]).json({ code: renamed.error });
+    return;
+  }
+  res.json({ user: publicUser(renamed.value) });
 });
 
 api.get('/me/stats', readLimit, requireUser, (req, res) => {

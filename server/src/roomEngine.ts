@@ -206,7 +206,13 @@ export function joinRoom(
   const asSpectator = opts.spectator || room.status !== 'waiting';
   if (asSpectator && spectators(room).length >= MAX_ROOM_SPECTATORS) return fail('ROOM_FULL');
   if (!asSpectator && activePlayers(room).length >= MAX_ROOM_PLAYERS) return fail('ROOM_FULL');
-  if (room.players.some((p) => p.name === opts.name && p.connected)) return fail('NAME_TAKEN');
+  // 昵称来自账号，所以同一账号重复进房按 userId 判重；无账号的调用回退到按名字判重
+  const userId = opts.userId ?? null;
+  if (userId !== null) {
+    if (room.players.some((p) => p.userId === userId && p.connected)) return fail('NAME_TAKEN');
+  } else if (room.players.some((p) => p.name === opts.name && p.connected)) {
+    return fail('NAME_TAKEN');
+  }
 
   const player = makePlayer({
     name: opts.name,
@@ -214,7 +220,7 @@ export function joinRoom(
     spectator: asSpectator,
     isHost: false,
     now,
-    userId: opts.userId ?? null,
+    userId,
   });
   // 已开局后加入的人只能旁观，本小局不参与作答
   if (asSpectator) {

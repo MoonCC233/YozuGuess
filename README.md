@@ -47,7 +47,9 @@
 
 ## 联机对战
 
-在首页点「联机对战」进入大厅，填昵称后建房或用 **5 位房间号**加入。房间通过 Socket.IO 实时同步，状态只存在服务端内存中。
+在首页点「联机对战」进入大厅，建房或用 **5 位房间号**加入。房间通过 Socket.IO 实时同步，状态只存在服务端内存中。
+
+**联机对战需要登录账号**：房间里显示的名字直接取自账号用户名，未登录时 `room:create` / `room:join` 会返回 `AUTH_REQUIRED`。想换个显示名，到账号中心改用户名即可（见[账号与战绩](#账号与战绩)）。同一账号不能同时占两个座位。单人模式不受影响，仍可匿名玩。
 
 ### 流程
 
@@ -82,8 +84,8 @@
 
 | 事件 | 方向 | 载荷 | 说明 |
 | --- | --- | --- | --- |
-| `room:create` | C → S | `{ name, boType, difficulty }` | 建房，返回 `{ code, key, room }` |
-| `room:join` | C → S | `{ code, name, spectator }` | 加入房间，返回 `{ code, key, room }` |
+| `room:create` | C → S | `{ boType, difficulty }` | 建房（需登录，名字取账号用户名），返回 `{ code, key, room }` |
+| `room:join` | C → S | `{ code, spectator }` | 加入房间（需登录），返回 `{ code, key, room }` |
 | `room:rejoin` | C → S | `{ code, key }` | 断线重连认领座位 |
 | `room:start` | C → S | — | 房主开始下一小局（整场已结束时自动先重置） |
 | `room:reset` | C → S | — | 房主重置比分回等待状态 |
@@ -91,11 +93,11 @@
 | `room:leave` | C → S | — | 离开房间 |
 | `room:state` | S → C | `PublicRoom` | 房间快照推送，按各自视角定制，`revision` 自增可用于丢弃乱序消息 |
 
-错误码：`INVALID_PAYLOAD`、`ROOM_NOT_FOUND`、`ROOM_FULL`、`ROOM_IN_PROGRESS`、`NAME_TAKEN`、`PLAYER_NOT_FOUND`、`NOT_HOST`、`NEED_MORE_PLAYERS`、`NOT_PLAYING`、`SPECTATOR_CANNOT_GUESS`、`ALREADY_DONE`、`GUESS_LIMIT_REACHED`、`DUPLICATE_GUESS`、`CHARACTER_NOT_FOUND`、`RATE_LIMITED`、`TOO_MANY_ROOMS`。
+错误码：`INVALID_PAYLOAD`、`AUTH_REQUIRED`、`ROOM_NOT_FOUND`、`ROOM_FULL`、`ROOM_IN_PROGRESS`、`NAME_TAKEN`（同一账号已在房内）、`PLAYER_NOT_FOUND`、`NOT_HOST`、`NEED_MORE_PLAYERS`、`NOT_PLAYING`、`SPECTATOR_CANNOT_GUESS`、`ALREADY_DONE`、`GUESS_LIMIT_REACHED`、`DUPLICATE_GUESS`、`CHARACTER_NOT_FOUND`、`RATE_LIMITED`、`TOO_MANY_ROOMS`。
 
 ## 账号与战绩
 
-账号是**完全可选**的：不登录也能玩全部模式，只是不留记录。登录后单人对局与联机对战会自动落库，可在个人主页查看统计与历史。
+账号对单人模式是**可选**的：不登录也能玩，只是不留记录。**联机对战必须登录**，因为房间里的名字直接取自账号用户名。登录后单人对局与联机对战会自动落库，可在个人主页查看统计与历史。
 
 ### 认证方式
 
@@ -105,11 +107,20 @@
 - 用户名 2-16 位（中英文、数字、下划线、连字符），大小写不敏感去重；密码至少 8 位
 - 认证类接口按 IP 独立限流（默认 20 次 / 窗口），防暴力撞库
 
+### 修改用户名
+
+在账号中心可随时改用户名。用户名同时是**登录名**和**联机显示名**，所以：
+
+- 改完之后必须用新用户名登录，旧名立即释放给别人
+- 改名不影响任何现有会话（不需要重新登录），也不改动已产生的战绩
+- 排行榜实时关联 `users` 表，改名后立刻显示新名字
+- 历史对战记录里的对手名是当时的快照，不会跟着改
+
 ### 统计口径
 
 | 规则 | 说明 |
 | --- | --- |
-| 匿名局不记录 | 未登录时开的局不会写入任何战绩 |
+| 匿名局不记录 | 未登录时开的单人局不会写入任何战绩（联机必须登录，不存在匿名场） |
 | 每日一柚每天只计第一次 | 靠数据库唯一索引保证，同一天重开不会刷数据 |
 | 自由练习每局都记 | 想刷多少局都行 |
 | 放弃看答案算一局 | 状态记为 `revealed`，计入场次但不计胜 |
@@ -198,12 +209,12 @@ pnpm start      # http://localhost:3000
 | `POST /api/auth/logout` | 登出，吊销当前会话 |
 | `GET /api/auth/me` | 当前登录用户，未登录返回 `{ user: null }` |
 | `POST /api/auth/password` | 改密，body: `{ currentPassword, newPassword }`，会吊销其他会话 |
+| `POST /api/auth/username` | 改用户名，body: `{ username }`，返回 `{ user }`，不影响现有会话 |
 | `GET /api/me/stats` | 单人 / 每日 / 联机三组统计（需登录） |
 | `GET /api/me/history?limit=` | 最近单人对局与联机对战（需登录，上限 100） |
 | `GET /api/leaderboard?limit=` | 排行榜，无需登录 |
 
 错误码：`SESSION_NOT_FOUND`、`GAME_FINISHED`、`CHARACTER_NOT_FOUND`、`DUPLICATE_GUESS`、`INVALID_PAYLOAD`、`NOT_FOUND`、`INTERNAL_ERROR`、`RATE_LIMITED`、`UNAUTHORIZED`、`INVALID_CREDENTIALS`、`USERNAME_TAKEN`、`USERNAME_INVALID`、`PASSWORD_WEAK`。
-
 联机对战不走 REST，全部通过 Socket.IO 事件完成，见[联机对战](#联机对战)。
 
 ## 数据
@@ -238,7 +249,7 @@ server/src
 client/src
 ├── api.ts           # fetch 封装与错误码
 ├── socket.ts        # socket.io-client 封装（ack Promise 化）
-├── storage.ts       # localStorage 持久化（昵称 / 房间 / 对局）
+├── storage.ts       # localStorage 持久化（房间 / 对局）
 ├── MetaContext.tsx  # 全局元数据
 ├── AuthContext.tsx  # 登录态与账号操作
 ├── components/      # GuessBoard / GuessInputBar / Toast

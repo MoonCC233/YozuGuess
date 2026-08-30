@@ -203,6 +203,13 @@ export function changeAccountPassword(currentPassword: string, newPassword: stri
   });
 }
 
+export function changeAccountUsername(username: string): Promise<{ user: AccountUser }> {
+  return call<{ user: AccountUser }>('/auth/username', {
+    method: 'POST',
+    body: JSON.stringify({ username }),
+  });
+}
+
 export function fetchStats(): Promise<{ stats: AccountStats }> {
   return call<{ stats: AccountStats }>('/me/stats');
 }

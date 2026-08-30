@@ -75,6 +75,24 @@ describe('room lifecycle', () => {
     });
   });
 
+  it('rejects a second join from the same account', () => {
+    const created = createRoom({
+      hostName: '房主',
+      boType: 3,
+      difficulty: 'heroine',
+      socketId: 'sock-host',
+      userId: 7,
+    });
+    if (!created.ok) throw new Error(created.error);
+    const room = created.value.room;
+    // 同一账号换个显示名也算重复
+    expect(joinRoom(room.code, { name: '别名', socketId: 's9', spectator: false, userId: 7 })).toEqual({
+      ok: false,
+      error: 'NAME_TAKEN',
+    });
+    expect(joinRoom(room.code, { name: '别人', socketId: 's10', spectator: false, userId: 8 }).ok).toBe(true);
+  });
+
   it('forces late joiners into spectator mode', () => {
     const { room } = setupRoom();
     startRound(room);

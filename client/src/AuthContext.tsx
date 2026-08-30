@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
+  changeAccountUsername,
   fetchMe,
   loginAccount,
   logoutAccount,
@@ -14,6 +15,7 @@ interface AuthContextValue {
   signIn: (username: string, password: string) => Promise<void>;
   signUp: (username: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  rename: (username: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue>({
@@ -22,6 +24,7 @@ const AuthContext = createContext<AuthContextValue>({
   signIn: async () => {},
   signUp: async () => {},
   signOut: async () => {},
+  rename: async () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -64,9 +67,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const rename = useCallback(async (username: string) => {
+    const res = await changeAccountUsername(username);
+    setUser(res.user);
+  }, []);
+
   const value = useMemo(
-    () => ({ user, loading, signIn, signUp, signOut }),
-    [user, loading, signIn, signUp, signOut]
+    () => ({ user, loading, signIn, signUp, signOut, rename }),
+    [user, loading, signIn, signUp, signOut, rename]
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

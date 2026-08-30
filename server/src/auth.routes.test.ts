@@ -132,11 +132,51 @@ describe('auth endpoints', () => {
       .expect(401, { code: 'INVALID_CREDENTIALS' });
   });
 
+  it('renames the account and keeps the session usable', async () => {
+    const cookie = await signUp();
+    const res = await request(app)
+      .post('/api/auth/username')
+      .set('Cookie', cookie)
+      .send({ username: '柚子新社长' })
+      .expect(200);
+    expect(res.body.user).toMatchObject({ username: '柚子新社长' });
+    const me = await request(app).get('/api/auth/me').set('Cookie', cookie).expect(200);
+    expect(me.body.user.username).toBe('柚子新社长');
+    await request(app)
+      .post('/api/auth/login')
+      .send({ username: '柚子新社长', password: CREDENTIALS.password })
+      .expect(200);
+    await request(app).post('/api/auth/login').send(CREDENTIALS).expect(401);
+  });
+
+  it('rejects a rename to a taken or malformed username', async () => {
+    const cookie = await signUp();
+    await signUp({ username: '别人家的名字', password: 'hunter2hunter2' });
+    await request(app)
+      .post('/api/auth/username')
+      .set('Cookie', cookie)
+      .send({ username: '别人家的名字' })
+      .expect(409, { code: 'USERNAME_TAKEN' });
+    await request(app)
+      .post('/api/auth/username')
+      .set('Cookie', cookie)
+      .send({ username: 'x' })
+      .expect(400, { code: 'USERNAME_INVALID' });
+    await request(app)
+      .post('/api/auth/username')
+      .set('Cookie', cookie)
+      .send({})
+      .expect(400, { code: 'INVALID_PAYLOAD' });
+  });
+
   it('requires login for the protected endpoints', async () => {
     await request(app)
       .post('/api/auth/password')
       .send({ currentPassword: 'hunter2hunter2', newPassword: 'brandnewsecret' })
       .expect(401, { code: 'UNAUTHORIZED' });
+    await request(app).post('/api/auth/username').send({ username: '路人' }).expect(401, {
+      code: 'UNAUTHORIZED',
+    });
     await request(app).get('/api/me/stats').expect(401, { code: 'UNAUTHORIZED' });
     await request(app).get('/api/me/history').expect(401, { code: 'UNAUTHORIZED' });
   });

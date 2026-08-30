@@ -206,14 +206,12 @@ describe('match recording', () => {
     const hostSocket = await client(host.cookie);
     const guestSocket = await client(guest.cookie);
     const created = await emit<{ code: string; key: string }>(hostSocket, 'room:create', {
-      name: '房主',
       boType: 1,
       difficulty: 'heroine',
     });
     if (!created.ok) throw new Error(created.error);
     const joined = await emit<{ key: string }>(guestSocket, 'room:join', {
       code: created.data.code,
-      name: '挑战者',
     });
     if (!joined.ok) throw new Error(joined.error);
 
@@ -243,9 +241,9 @@ describe('match recording', () => {
     const guest = await signIn('逃跑');
     const hostSocket = await client(host.cookie);
     const guestSocket = await client(guest.cookie);
-    const created = await emit<{ code: string }>(hostSocket, 'room:create', { name: '留守', boType: 3 });
+    const created = await emit<{ code: string }>(hostSocket, 'room:create', { boType: 3 });
     if (!created.ok) throw new Error(created.error);
-    await emit(guestSocket, 'room:join', { code: created.data.code, name: '逃跑' });
+    await emit(guestSocket, 'room:join', { code: created.data.code });
     await emit(hostSocket, 'room:start');
 
     const finished = waitForState(hostSocket, (r) => r.status === 'finished');
@@ -262,9 +260,9 @@ describe('match recording', () => {
     const guest = await signIn('陪练');
     const hostSocket = await client(host.cookie);
     const guestSocket = await client(guest.cookie);
-    const created = await emit<{ code: string }>(hostSocket, 'room:create', { name: '再战', boType: 1 });
+    const created = await emit<{ code: string }>(hostSocket, 'room:create', { boType: 1 });
     if (!created.ok) throw new Error(created.error);
-    await emit(guestSocket, 'room:join', { code: created.data.code, name: '陪练' });
+    await emit(guestSocket, 'room:join', { code: created.data.code });
 
     for (let i = 0; i < 2; i += 1) {
       await emit(hostSocket, 'room:start');
@@ -278,30 +276,29 @@ describe('match recording', () => {
     expect(getStats(host.id, MAX_GUESSES).match).toMatchObject({ played: 2, won: 2 });
   });
 
-  it('does not record a match for anonymous players', async () => {
+  it('refuses to open a room for anonymous sockets', async () => {
     const hostSocket = await client();
-    const guestSocket = await client();
-    const created = await emit<{ code: string }>(hostSocket, 'room:create', { name: '路人甲', boType: 1 });
-    if (!created.ok) throw new Error(created.error);
-    await emit(guestSocket, 'room:join', { code: created.data.code, name: '路人乙' });
-    await emit(hostSocket, 'room:start');
-    const room = getRoom(created.data.code)!;
-    const finished = waitForState(hostSocket, (r) => r.status === 'finished');
-    await emit(hostSocket, 'room:guess', { characterId: room.answerId });
-    const state = await finished;
-    expect(state.status).toBe('finished');
-
-    const { id } = await signIn('看客');
-    expect(getStats(id, MAX_GUESSES).match.played).toBe(0);
+    expect(await emit(hostSocket, 'room:create', { boType: 1 })).toEqual({
+      ok: false,
+      error: 'AUTH_REQUIRED',
+    });
   });
 
-  it('records only for the signed-in side of a mixed match', async () => {
+  it('records the renamed username in the opponent snapshot', async () => {
     const host = await signIn('登录方');
+    const guest = await signIn('旧名字');
     const hostSocket = await client(host.cookie);
-    const guestSocket = await client();
-    const created = await emit<{ code: string }>(hostSocket, 'room:create', { name: '登录方', boType: 1 });
+    const guestSocket = await client(guest.cookie);
+    // 改名后再进房，房间里应该用新名字
+    await request(server.http)
+      .post('/api/auth/username')
+      .set('Cookie', guest.cookie)
+      .send({ username: '新名字' })
+      .expect(200);
+
+    const created = await emit<{ code: string }>(hostSocket, 'room:create', { boType: 1 });
     if (!created.ok) throw new Error(created.error);
-    await emit(guestSocket, 'room:join', { code: created.data.code, name: '游客' });
+    await emit(guestSocket, 'room:join', { code: created.data.code });
     await emit(hostSocket, 'room:start');
     const room = getRoom(created.data.code)!;
     const finished = waitForState(hostSocket, (r) => r.status === 'finished');
@@ -310,6 +307,6 @@ describe('match recording', () => {
 
     const { matches } = getHistory(host.id);
     expect(matches).toHaveLength(1);
-    expect(matches[0]).toMatchObject({ result: 'won', opponents: ['游客'] });
+    expect(matches[0]).toMatchObject({ result: 'won', opponents: ['新名字'] });
   });
 });

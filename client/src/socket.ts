@@ -54,11 +54,11 @@ export function emit<T>(event: string, payload?: unknown): Promise<T> {
   });
 }
 
-export function createRoom(input: { name: string; boType: BoType; difficulty: Difficulty }): Promise<RoomHandshake> {
+export function createRoom(input: { boType: BoType; difficulty: Difficulty }): Promise<RoomHandshake> {
   return emit<RoomHandshake>('room:create', input);
 }
 
-export function joinRoom(input: { code: string; name: string; spectator: boolean }): Promise<RoomHandshake> {
+export function joinRoom(input: { code: string; spectator: boolean }): Promise<RoomHandshake> {
   return emit<RoomHandshake>('room:join', input);
 }
 

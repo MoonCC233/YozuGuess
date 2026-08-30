@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import request from 'supertest';
 import { io as connect, type Socket as ClientSocket } from 'socket.io-client';
 import { CHARACTERS, MAX_GUESSES, getCharacter, type PublicRoom } from '@yozu/shared';
 import { createServerBundle, type YozuServer } from './server.js';
+import { closeDatabase, useMemoryDatabase } from './db.js';
+import { register } from './accounts.js';
 import { getRoom, resetRooms } from './roomEngine.js';
 import { resetRateLimits } from './rateLimit.js';
 
@@ -10,6 +13,7 @@ let url: string;
 const clients: ClientSocket[] = [];
 
 beforeEach(async () => {
+  useMemoryDatabase();
   resetRooms();
   resetRateLimits();
   server = createServerBundle();
@@ -21,15 +25,44 @@ beforeEach(async () => {
 afterEach(async () => {
   for (const c of clients.splice(0)) c.disconnect();
   await server.close();
+  closeDatabase();
 });
 
-function client(): Promise<ClientSocket> {
-  const socket = connect(url, { transports: ['websocket'], forceNew: true });
+function cookieOf(res: request.Response): string {
+  const raw = res.headers['set-cookie'];
+  const list = Array.isArray(raw) ? raw : raw ? [raw] : [];
+  const found = list.find((c) => c.startsWith('yozu_session='));
+  if (!found) throw new Error('missing session cookie');
+  return found.split(';')[0]!;
+}
+
+/** 联机全部要求登录，测试里先建号再拿会话 cookie */
+async function signIn(username: string): Promise<string> {
+  const created = register(username, 'hunter2hunter2');
+  if (!created.ok) throw new Error(created.error);
+  const res = await request(server.http)
+    .post('/api/auth/login')
+    .send({ username, password: 'hunter2hunter2' })
+    .expect(200);
+  return cookieOf(res);
+}
+
+function client(cookie?: string): Promise<ClientSocket> {
+  const socket = connect(url, {
+    transports: ['websocket'],
+    forceNew: true,
+    ...(cookie ? { extraHeaders: { Cookie: cookie } } : {}),
+  });
   clients.push(socket);
   return new Promise((resolve, reject) => {
     socket.on('connect', () => resolve(socket));
     socket.on('connect_error', reject);
   });
+}
+
+/** 登录并直接建立一条带会话的 socket 连接 */
+async function signedClient(username: string): Promise<ClientSocket> {
+  return client(await signIn(username));
 }
 
 type AckOk<T> = { ok: true; data: T };
@@ -77,17 +110,15 @@ interface JoinData {
 }
 
 async function makeMatch(boType: 1 | 3 | 5 | 7 = 3) {
-  const hostSocket = await client();
-  const guestSocket = await client();
+  const hostSocket = await signedClient('主机');
+  const guestSocket = await signedClient('客人');
   const created = await emit<JoinData>(hostSocket, 'room:create', {
-    name: '主机',
     boType,
     difficulty: 'heroine',
   });
   if (!created.ok) throw new Error(created.error);
   const joined = await emit<JoinData>(guestSocket, 'room:join', {
     code: created.data.code,
-    name: '客人',
   });
   if (!joined.ok) throw new Error(joined.error);
   // 建房时用随机答案，测试里直接读服务端房间状态拿答案
@@ -104,46 +135,70 @@ async function makeMatch(boType: 1 | 3 | 5 | 7 = 3) {
 
 describe('socket handshake', () => {
   it('creates and joins a room, broadcasting state to everyone', async () => {
-    const hostSocket = await client();
-    const created = await emit<JoinData>(hostSocket, 'room:create', { name: '主机' });
+    const hostSocket = await signedClient('主机');
+    const created = await emit<JoinData>(hostSocket, 'room:create', {});
     expect(created.ok).toBe(true);
     if (!created.ok) return;
     expect(created.data.code).toMatch(/^[A-Z2-9]{5}$/);
     expect(created.data.room.players).toHaveLength(1);
     expect(created.data.room.boType).toBe(3);
 
-    const guestSocket = await client();
+    const guestSocket = await signedClient('客人');
     const pushed = nextState(hostSocket);
     const joined = await emit<JoinData>(guestSocket, 'room:join', {
       code: created.data.code.toLowerCase(),
-      name: '客人',
     });
     expect(joined.ok).toBe(true);
     const state = await pushed;
     expect(state.players.map((p) => p.name)).toEqual(['主机', '客人']);
   });
 
+  it('requires an account before creating or joining a room', async () => {
+    const anon = await client();
+    expect(await emit(anon, 'room:create', {})).toEqual({ ok: false, error: 'AUTH_REQUIRED' });
+
+    const hostSocket = await signedClient('房主');
+    const created = await emit<JoinData>(hostSocket, 'room:create', {});
+    if (!created.ok) throw new Error(created.error);
+    expect(await emit(anon, 'room:join', { code: created.data.code })).toEqual({
+      ok: false,
+      error: 'AUTH_REQUIRED',
+    });
+  });
+
+  it('rejects the same account joining a room twice', async () => {
+    const cookie = await signIn('分身');
+    const first = await client(cookie);
+    const created = await emit<JoinData>(first, 'room:create', {});
+    if (!created.ok) throw new Error(created.error);
+    const second = await client(cookie);
+    expect(await emit(second, 'room:join', { code: created.data.code })).toEqual({
+      ok: false,
+      error: 'NAME_TAKEN',
+    });
+  });
+
   it('validates payloads and reports unknown rooms', async () => {
-    const socket = await client();
-    expect(await emit(socket, 'room:create', { name: '' })).toEqual({ ok: false, error: 'INVALID_PAYLOAD' });
-    expect(await emit(socket, 'room:join', { code: 'ABC', name: 'x' })).toEqual({
+    const socket = await signedClient('校验');
+    expect(await emit(socket, 'room:create', { boType: 2 })).toEqual({ ok: false, error: 'INVALID_PAYLOAD' });
+    expect(await emit(socket, 'room:join', { code: 'ABC' })).toEqual({
       ok: false,
       error: 'INVALID_PAYLOAD',
     });
-    expect(await emit(socket, 'room:join', { code: 'ZZZZZ', name: 'x' })).toEqual({
+    expect(await emit(socket, 'room:join', { code: 'ZZZZZ' })).toEqual({
       ok: false,
       error: 'ROOM_NOT_FOUND',
     });
   });
 
   it('only lets the host start, and needs two players', async () => {
-    const hostSocket = await client();
-    const created = await emit<JoinData>(hostSocket, 'room:create', { name: '主机' });
+    const hostSocket = await signedClient('主机');
+    const created = await emit<JoinData>(hostSocket, 'room:create', {});
     if (!created.ok) return;
     expect(await emit(hostSocket, 'room:start')).toEqual({ ok: false, error: 'NEED_MORE_PLAYERS' });
 
-    const guestSocket = await client();
-    await emit(guestSocket, 'room:join', { code: created.data.code, name: '客人' });
+    const guestSocket = await signedClient('客人');
+    await emit(guestSocket, 'room:join', { code: created.data.code });
     expect(await emit(guestSocket, 'room:start')).toEqual({ ok: false, error: 'NOT_HOST' });
     const started = await emit<{ room: PublicRoom }>(hostSocket, 'room:start');
     expect(started.ok).toBe(true);
@@ -239,8 +294,8 @@ describe('socket gameplay', () => {
 
   it('lets spectators watch with full feedback but not guess', async () => {
     const { hostSocket, code, room } = await makeMatch(5);
-    const watcher = await client();
-    const joined = await emit<JoinData>(watcher, 'room:join', { code, name: '观众', spectator: true });
+    const watcher = await signedClient('观众');
+    const joined = await emit<JoinData>(watcher, 'room:join', { code, spectator: true });
     expect(joined.ok).toBe(true);
     await emit(hostSocket, 'room:start');
     const wrong = CHARACTERS.find((c) => c.id !== room.answerId)!;

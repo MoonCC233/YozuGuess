@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { BO_TYPES, type BoType } from '@yozu/shared';
 import type { Difficulty } from '../api.js';
 import { useMeta } from '../MetaContext.js';
+import { useAuth } from '../AuthContext.js';
 import { errorMessage } from '../errors.js';
 import { RoomError, createRoom, joinRoom, rejoinRoom } from '../socket.js';
-import { clearRoom, loadNickname, loadRoom, saveNickname, saveRoom } from '../storage.js';
+import { clearRoom, loadRoom, saveRoom } from '../storage.js';
 import { Toast } from '../components/Toast.js';
 
 const BO_HINT: Record<BoType, string> = {
@@ -18,7 +19,7 @@ const BO_HINT: Record<BoType, string> = {
 export function MultiLobby() {
   const navigate = useNavigate();
   const { meta } = useMeta();
-  const [name, setName] = useState('');
+  const { user, loading: authLoading } = useAuth();
   const [code, setCode] = useState('');
   const [boType, setBoType] = useState<BoType>(3);
   const [difficulty, setDifficulty] = useState<Difficulty>('heroine');
@@ -27,11 +28,6 @@ export function MultiLobby() {
   const [toast, setToast] = useState<string | null>(null);
   const [saved, setSaved] = useState(loadRoom());
 
-  useEffect(() => {
-    const nickname = loadNickname();
-    if (nickname) setName(nickname);
-  }, []);
-
   function failWith(err: unknown) {
     if (err instanceof RoomError) setToast(errorMessage(err.code));
     else if (err instanceof Error && err.message === 'SOCKET_TIMEOUT') setToast(errorMessage('SOCKET_TIMEOUT'));
@@ -39,16 +35,11 @@ export function MultiLobby() {
   }
 
   async function onCreate() {
-    const trimmed = name.trim();
-    if (trimmed === '') {
-      setToast('请先填写昵称');
-      return;
-    }
+    if (!user) return;
     setBusy(true);
     try {
-      const handshake = await createRoom({ name: trimmed, boType, difficulty });
-      saveNickname(trimmed);
-      saveRoom({ code: handshake.code, key: handshake.key, name: trimmed });
+      const handshake = await createRoom({ boType, difficulty });
+      saveRoom({ code: handshake.code, key: handshake.key, name: user.username });
       navigate(`/multi/${handshake.code}`);
     } catch (err) {
       failWith(err);
@@ -58,21 +49,16 @@ export function MultiLobby() {
   }
 
   async function onJoin() {
-    const trimmed = name.trim();
+    if (!user) return;
     const roomCode = code.trim().toUpperCase();
-    if (trimmed === '') {
-      setToast('请先填写昵称');
-      return;
-    }
     if (roomCode.length !== 5) {
       setToast('房间号是 5 位字符');
       return;
     }
     setBusy(true);
     try {
-      const handshake = await joinRoom({ code: roomCode, name: trimmed, spectator });
-      saveNickname(trimmed);
-      saveRoom({ code: handshake.code, key: handshake.key, name: trimmed });
+      const handshake = await joinRoom({ code: roomCode, spectator });
+      saveRoom({ code: handshake.code, key: handshake.key, name: user.username });
       navigate(`/multi/${handshake.code}`);
     } catch (err) {
       failWith(err);
@@ -96,22 +82,49 @@ export function MultiLobby() {
     }
   }
 
+  if (authLoading) {
+    return (
+      <section className="page lobby">
+        <h1 className="title">联机对战</h1>
+        <p className="muted">正在确认登录状态…</p>
+      </section>
+    );
+  }
+
+  if (!user) {
+    return (
+      <section className="page lobby">
+        <h1 className="title">联机对战</h1>
+        <p className="subtitle">和朋友同时猜同一个角色，谁先猜中谁拿下这一小局</p>
+        <div className="card">
+          <h2>需要登录</h2>
+          <p className="muted">
+            联机对战里显示的名字直接取自账号用户名，所以要先登录才能建房或加入。单人模式无需登录。
+          </p>
+          <div className="actions">
+            <Link className="btn btn-primary btn-lg" to="/login">
+              去登录
+            </Link>
+            <Link className="btn btn-ghost" to="/register">
+              注册新账号
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="page lobby">
       <h1 className="title">联机对战</h1>
       <p className="subtitle">和朋友同时猜同一个角色，谁先猜中谁拿下这一小局</p>
 
       <div className="card">
-        <h2>昵称</h2>
-        <input
-          className="text-input"
-          type="text"
-          maxLength={16}
-          placeholder="房间里显示的名字"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          aria-label="昵称"
-        />
+        <h2>你的名字</h2>
+        <p className="muted">
+          房间里显示为 <strong>{user.username}</strong>，想换个名字请到{' '}
+          <Link to="/me">账号中心</Link> 修改。
+        </p>
       </div>
 
       {saved ? (

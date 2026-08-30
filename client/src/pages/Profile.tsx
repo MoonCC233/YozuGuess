@@ -94,7 +94,7 @@ function StatBlock({ title, stats }: { title: string; stats: SoloStats }) {
 
 export function Profile() {
   const navigate = useNavigate();
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, signOut, rename } = useAuth();
   const [stats, setStats] = useState<AccountStats | null>(null);
   const [games, setGames] = useState<SoloHistoryItem[]>([]);
   const [matches, setMatches] = useState<MatchHistoryItem[]>([]);
@@ -102,6 +102,8 @@ export function Profile() {
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [busy, setBusy] = useState(false);
+  const [nameDraft, setNameDraft] = useState('');
+  const [renaming, setRenaming] = useState(false);
 
   const load = useCallback(() => {
     void Promise.all([fetchStats(), fetchHistory(20)])
@@ -123,6 +125,28 @@ export function Profile() {
     }
     load();
   }, [loading, user, navigate, load]);
+
+  useEffect(() => {
+    if (user) setNameDraft(user.username);
+  }, [user]);
+
+  async function onRename(event: FormEvent) {
+    event.preventDefault();
+    const trimmed = nameDraft.trim();
+    if (trimmed === '' || trimmed === user?.username) {
+      setToast('请输入一个新的用户名');
+      return;
+    }
+    setRenaming(true);
+    try {
+      await rename(trimmed);
+      setToast('用户名已更新，联机房间里也会用新名字');
+    } catch (err) {
+      setToast(err instanceof ApiError ? errorMessage(err.code) : '请求失败，请检查网络');
+    } finally {
+      setRenaming(false);
+    }
+  }
 
   async function onChangePassword(event: FormEvent) {
     event.preventDefault();
@@ -249,6 +273,29 @@ export function Profile() {
             ))}
           </ul>
         )}
+      </div>
+
+      <div className="card">
+        <h2>修改用户名</h2>
+        <p className="muted">用户名同时是登录名，也是联机房间里显示的名字，改完请用新名字登录。</p>
+        <form className="form" onSubmit={(e) => void onRename(e)}>
+          <label className="field">
+            <span className="field-label">用户名</span>
+            <input
+              className="text-input"
+              type="text"
+              maxLength={16}
+              autoComplete="username"
+              value={nameDraft}
+              onChange={(e) => setNameDraft(e.target.value)}
+            />
+          </label>
+          <div className="actions">
+            <button type="submit" className="btn btn-primary" disabled={renaming}>
+              保存用户名
+            </button>
+          </div>
+        </form>
       </div>
 
       <div className="card">

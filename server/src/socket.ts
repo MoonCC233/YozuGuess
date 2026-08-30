@@ -17,22 +17,18 @@ import {
 } from './roomEngine.js';
 import { consume } from './rateLimit.js';
 import { config } from './config.js';
-import { authenticate } from './accounts.js';
+import { authenticate, type User } from './accounts.js';
 import { readSessionToken } from './auth.js';
 
 export type Ack<T> = (response: { ok: true; data: T } | { ok: false; error: RoomErrorCode }) => void;
 
-const nameSchema = z.string().trim().min(1).max(16);
-
 const createSchema = z.object({
-  name: nameSchema,
   boType: z.union([z.literal(1), z.literal(3), z.literal(5), z.literal(7)]).default(3),
   difficulty: z.enum(['heroine', 'full']).default('heroine'),
 });
 
 const joinSchema = z.object({
   code: z.string().trim().length(5),
-  name: nameSchema,
   spectator: z.boolean().default(false),
 });
 
@@ -71,9 +67,9 @@ function limited(socket: Socket, name: string, limit: number): boolean {
  * 从握手 cookie 里认出登录用户。
  * 每次建房/加入时重新解析，长连接期间登出不影响已在进行的这一场。
  */
-function socketUserId(socket: Socket): number | null {
+function socketUser(socket: Socket): User | null {
   const token = readSessionToken(socket.handshake.headers.cookie);
-  return authenticate(token)?.id ?? null;
+  return authenticate(token) ?? null;
 }
 
 export function registerSocket(io: Server): () => void {
@@ -89,12 +85,14 @@ export function registerSocket(io: Server): () => void {
       if (limited(socket, 'create', 10)) return reply(ack, { ok: false, error: 'RATE_LIMITED' });
       const parsed = createSchema.safeParse(payload ?? {});
       if (!parsed.success) return reply(ack, { ok: false, error: 'INVALID_PAYLOAD' });
+      const user = socketUser(socket);
+      if (!user) return reply(ack, { ok: false, error: 'AUTH_REQUIRED' });
       const created = createRoom({
-        hostName: parsed.data.name,
+        hostName: user.username,
         boType: parsed.data.boType,
         difficulty: parsed.data.difficulty,
         socketId: socket.id,
-        userId: socketUserId(socket),
+        userId: user.id,
       });
       if (!created.ok) return reply(ack, { ok: false, error: created.error });
       const { room, player } = created.value;
@@ -107,11 +105,13 @@ export function registerSocket(io: Server): () => void {
       if (limited(socket, 'join', 30)) return reply(ack, { ok: false, error: 'RATE_LIMITED' });
       const parsed = joinSchema.safeParse(payload ?? {});
       if (!parsed.success) return reply(ack, { ok: false, error: 'INVALID_PAYLOAD' });
+      const user = socketUser(socket);
+      if (!user) return reply(ack, { ok: false, error: 'AUTH_REQUIRED' });
       const joined = joinRoom(parsed.data.code.toUpperCase(), {
-        name: parsed.data.name,
+        name: user.username,
         socketId: socket.id,
         spectator: parsed.data.spectator,
-        userId: socketUserId(socket),
+        userId: user.id,
       });
       if (!joined.ok) return reply(ack, { ok: false, error: joined.error });
       const { room, player } = joined.value;

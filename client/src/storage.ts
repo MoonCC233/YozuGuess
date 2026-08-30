@@ -76,21 +76,3 @@ export function clearRoom(): void {
     // 忽略
   }
 }
-
-const NAME_KEY = 'yozu:nickname';
-
-export function saveNickname(name: string): void {
-  try {
-    localStorage.setItem(NAME_KEY, name);
-  } catch {
-    // 忽略
-  }
-}
-
-export function loadNickname(): string {
-  try {
-    return localStorage.getItem(NAME_KEY) ?? '';
-  } catch {
-    return '';
-  }
-}

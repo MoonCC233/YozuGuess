@@ -205,6 +205,30 @@ export function changePassword(
   return { ok: true, value: true };
 }
 
+/** 改名：登录用的就是这个用户名，所以要过同样的格式与重名校验 */
+export function changeUsername(userId: number, nextUsername: string): AccountResult<User> {
+  const name = nextUsername.trim();
+  if (!USERNAME_RE.test(name)) return { ok: false, error: 'USERNAME_INVALID' };
+  const current = getUserById(userId);
+  if (!current) return { ok: false, error: 'UNAUTHORIZED' };
+  // 只改大小写属于同一个名字，放行；否则撞到别人就拒绝
+  const existing = findUserRow(name);
+  if (existing && existing.id !== userId) return { ok: false, error: 'USERNAME_TAKEN' };
+  if (existing === undefined && name.toLowerCase() === current.username.toLowerCase()) {
+    // 理论上不会走到（自己肯定查得到），留个兜底
+    return { ok: true, value: current };
+  }
+  try {
+    db()
+      .prepare('UPDATE users SET username = ?, username_lower = ? WHERE id = ?')
+      .run(name, name.toLowerCase(), userId);
+  } catch {
+    return { ok: false, error: 'USERNAME_TAKEN' };
+  }
+  const updated = getUserById(userId);
+  return updated ? { ok: true, value: updated } : { ok: false, error: 'UNAUTHORIZED' };
+}
+
 /* ------------------------------- 战绩记录 ------------------------------- */
 
 export type SoloOutcome = 'won' | 'lost' | 'revealed';

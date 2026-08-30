@@ -4,6 +4,7 @@ import { closeDatabase, useMemoryDatabase } from './db.js';
 import {
   authenticate,
   changePassword,
+  changeUsername,
   getHistory,
   getLeaderboard,
   getStats,
@@ -165,6 +166,54 @@ describe('changePassword', () => {
     expect(login('柚子', 'brandnewpass').ok).toBe(true);
     expect(authenticate(token)?.id).toBe(id);
     expect(authenticate(other.value.token)).toBeNull();
+  });
+});
+
+describe('changeUsername', () => {
+  it('renames the account and lets the new name log in', () => {
+    const { id, token } = signUp();
+    const renamed = changeUsername(id, '新柚子');
+    expect(renamed.ok).toBe(true);
+    if (!renamed.ok) return;
+    expect(renamed.value.username).toBe('新柚子');
+    expect(getUserById(id)?.username).toBe('新柚子');
+    expect(login('新柚子', 'hunter2hunter2').ok).toBe(true);
+    expect(login('柚子', 'hunter2hunter2').ok).toBe(false);
+    // 改名不该踢掉当前会话
+    expect(authenticate(token)?.id).toBe(id);
+  });
+
+  it('allows a case-only change of your own name', () => {
+    const created = register('Yuzu', 'hunter2hunter2');
+    if (!created.ok) throw new Error(created.error);
+    const renamed = changeUsername(created.value.user.id, 'YUZU');
+    expect(renamed.ok).toBe(true);
+    if (!renamed.ok) return;
+    expect(renamed.value.username).toBe('YUZU');
+  });
+
+  it('rejects a name taken by someone else, ignoring case', () => {
+    signUp('先来的');
+    const { id } = signUp('后来的');
+    expect(changeUsername(id, '先来的')).toEqual({ ok: false, error: 'USERNAME_TAKEN' });
+  });
+
+  it('rejects malformed names', () => {
+    const { id } = signUp();
+    expect(changeUsername(id, 'x')).toEqual({ ok: false, error: 'USERNAME_INVALID' });
+    expect(changeUsername(id, '带 空格')).toEqual({ ok: false, error: 'USERNAME_INVALID' });
+    expect(changeUsername(id, 'a'.repeat(17))).toEqual({ ok: false, error: 'USERNAME_INVALID' });
+  });
+
+  it('rejects an unknown user', () => {
+    expect(changeUsername(9999, '幽灵')).toEqual({ ok: false, error: 'UNAUTHORIZED' });
+  });
+
+  it('shows the new name on the leaderboard', () => {
+    const { id } = signUp('旧名');
+    recordSoloGame(soloInput({ userId: id, status: 'won' }));
+    expect(changeUsername(id, '新名').ok).toBe(true);
+    expect(getLeaderboard().map((e) => e.username)).toEqual(['新名']);
   });
 });
 
