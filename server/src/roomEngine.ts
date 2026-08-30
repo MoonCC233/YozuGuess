@@ -287,19 +287,24 @@ export function startRound(room: Room, now = Date.now()): RoomResult<Room> {
   return { ok: true, value: room };
 }
 
-/** 一次猜测中命中的属性数量，用于无人猜中时判定「谁更接近」 */
-function correctAttributeCount(feedback: GuessFeedback): number {
-  return Object.values(feedback.attributes).filter((a) => a.level === 'correct').length;
+/** 一次猜测的接近度打分：完全一致 2 分，接近 1 分，用于无人猜中时判定「谁更接近」 */
+function proximityScore(feedback: GuessFeedback): number {
+  return Object.values(feedback.attributes).reduce((sum, a) => {
+    if (a.level === 'correct') return sum + 2;
+    if (a.level === 'close') return sum + 1;
+    return sum;
+  }, 0);
 }
 
 function bestAttributeScore(player: RoomPlayer): number {
-  return player.guesses.reduce((best, g) => Math.max(best, correctAttributeCount(g)), 0);
+  return player.guesses.reduce((best, g) => Math.max(best, proximityScore(g)), 0);
 }
 
 /**
  * 小局结束判定：
  * 1. 有人猜中 -> 最早猜中者胜
- * 2. 无人猜中 -> 单次猜测命中属性最多者胜；再平则用了更少次数者胜；仍平则本小局平局
+ * 2. 无人猜中 -> 只在真正猜过的人之间比较：单次猜测命中属性最多者胜；
+ *    再平则用了更少次数者胜；仍平（或全场没人猜过）则本小局平局
  */
 function judgeRound(room: Room): { winnerKey: string | null; reason: RoundEndReason } {
   const players = activePlayers(room);
@@ -310,14 +315,19 @@ function judgeRound(room: Room): { winnerKey: string | null; reason: RoundEndRea
   }
   const allDone = players.every((p) => p.done);
   const reason: RoundEndReason = allDone ? 'exhausted' : 'timeout';
-  if (players.length === 0) return { winnerKey: null, reason };
 
-  const ranked = [...players].sort((a, b) => {
+  // 一次都没猜的人不参与评比，否则「挂机」反而会赢
+  const candidates = players.filter((p) => p.guesses.length > 0);
+  if (candidates.length === 0) return { winnerKey: null, reason };
+
+  const ranked = [...candidates].sort((a, b) => {
     const scoreDiff = bestAttributeScore(b) - bestAttributeScore(a);
     if (scoreDiff !== 0) return scoreDiff;
     return a.guesses.length - b.guesses.length;
   });
   const top = ranked[0]!;
+  // 谁都没蒙对任何属性时不分胜负
+  if (bestAttributeScore(top) === 0) return { winnerKey: null, reason };
   const runnerUp = ranked[1];
   const tied =
     runnerUp !== undefined &&

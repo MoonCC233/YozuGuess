@@ -28,6 +28,8 @@ function useCountdown(target: number | null): number {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (target === null) return;
+    // 目标变化时立刻刷新，避免沿用挂载时抓到的过期时间戳
+    setNow(Date.now());
     const timer = window.setInterval(() => setNow(Date.now()), 250);
     return () => window.clearInterval(timer);
   }, [target]);
@@ -44,11 +46,15 @@ export function MultiRoom() {
   const [fatal, setFatal] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const revision = useRef(0);
+  const [lastRound, setLastRound] = useState<PublicRoom['roundResult']>(null);
 
   const applyRoom = useCallback((next: PublicRoom) => {
     // 丢弃乱序到达的旧快照
     if (next.revision < revision.current) return;
     revision.current = next.revision;
+    // 结算信息只在间歇期下发，缓存下来让玩家在下一小局里也能回看
+    if (next.roundResult) setLastRound(next.roundResult);
+    if (next.status === 'waiting' && next.round === 0) setLastRound(null);
     setRoom(next);
   }, []);
 
@@ -266,27 +272,27 @@ export function MultiRoom() {
         </div>
       ) : null}
 
-      {room.roundResult ? (
-        <div className="round-result" role="status">
+      {lastRound ? (
+        <div className={`round-result${room.roundResult ? '' : ' round-result-past'}`} role="status">
           <h3>
-            第 {room.roundResult.round} 小局
-            {room.roundResult.winnerKey === null
+            第 {lastRound.round} 小局
+            {lastRound.winnerKey === null
               ? '打平'
-              : room.roundResult.winnerKey === room.viewerKey
+              : lastRound.winnerKey === room.viewerKey
                 ? '你拿下'
-                : `由 ${room.players.find((p) => p.key === room.roundResult!.winnerKey)?.name ?? '对手'} 拿下`}
+                : `由 ${room.players.find((p) => p.key === lastRound.winnerKey)?.name ?? '对手'} 拿下`}
           </h3>
-          {room.roundResult.answer ? (
+          {lastRound.answer ? (
             <p>
-              答案是 <strong>{room.roundResult.answer.name}</strong>（{room.roundResult.answer.nameJp}）
+              答案是 <strong>{lastRound.answer.name}</strong>（{lastRound.answer.nameJp}）
             </p>
           ) : null}
           <p className="muted">
-            {room.roundResult.reason === 'solved'
+            {lastRound.reason === 'solved'
               ? '有人猜中了'
-              : room.roundResult.reason === 'timeout'
+              : lastRound.reason === 'timeout'
                 ? '时间到，按接近程度判定'
-                : room.roundResult.reason === 'exhausted'
+                : lastRound.reason === 'exhausted'
                   ? '机会全部用完，按接近程度判定'
                   : '对手中途离开'}
           </p>

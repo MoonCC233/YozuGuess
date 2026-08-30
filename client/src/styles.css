@@ -767,6 +767,10 @@ a.btn {
   margin: 0;
 }
 
+.round-result-past {
+  opacity: 0.62;
+}
+
 @media (width <= 640px) {
   .game-head {
     flex-direction: column;

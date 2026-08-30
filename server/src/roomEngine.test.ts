@@ -211,6 +211,55 @@ describe('round play', () => {
     expect(room.roundResult?.winnerKey).toBeNull();
   });
 
+  it('ignores players who never guessed when judging proximity', () => {
+    const { room, host, guest } = setupRoom();
+    startRound(room);
+    // 客人挂机一次都不猜，主机猜了一次同作品角色 -> 主机应当拿下小局
+    const sameTitle = CHARACTERS.find((c) => c.id !== ANSWER.id && c.title === ANSWER.title)!;
+    applyGuess(room, host.key, sameTitle.id);
+    endRound(room);
+    expect(room.roundResult?.winnerKey).toBe(host.key);
+    void guest;
+  });
+
+  it('draws the round when nobody guessed at all', () => {
+    const { room } = setupRoom();
+    startRound(room);
+    endRound(room);
+    expect(room.roundResult?.reason).toBe('timeout');
+    expect(room.roundResult?.winnerKey).toBeNull();
+  });
+
+  it('counts close attributes as partial progress when judging proximity', () => {
+    const { room, host, guest } = setupRoom();
+    startRound(room);
+    // 找一个所有属性都不沾边的角色，和一个至少有 close 属性的角色对比
+    const nearMiss = CHARACTERS.find(
+      (c) =>
+        c.id !== ANSWER.id &&
+        c.title !== ANSWER.title &&
+        Math.abs(c.rank - ANSWER.rank) > 0 &&
+        Math.abs(c.rank - ANSWER.rank) <= 1
+    );
+    if (!nearMiss) return;
+    const farMiss = CHARACTERS.find(
+      (c) =>
+        c.id !== ANSWER.id &&
+        c.title !== ANSWER.title &&
+        c.hair !== ANSWER.hair &&
+        c.eye !== ANSWER.eye &&
+        c.cv !== ANSWER.cv &&
+        Math.abs(c.rank - ANSWER.rank) > 1 &&
+        Math.abs(c.bakusen - ANSWER.bakusen) > 1 &&
+        c.isMain !== ANSWER.isMain
+    );
+    if (!farMiss) return;
+    applyGuess(room, host.key, nearMiss.id);
+    applyGuess(room, guest.key, farMiss.id);
+    endRound(room);
+    expect(room.roundResult?.winnerKey).toBe(host.key);
+  });
+
   it('marks the round exhausted when everyone runs out of guesses', () => {
     const { room, host, guest } = setupRoom();
     startRound(room);
