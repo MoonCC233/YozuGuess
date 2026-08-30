@@ -3,6 +3,8 @@ import { Home } from './pages/Home.js';
 import { Game } from './pages/Game.js';
 import { Codex } from './pages/Codex.js';
 import { Rules } from './pages/Rules.js';
+import { MultiLobby } from './pages/MultiLobby.js';
+import { MultiRoom } from './pages/MultiRoom.js';
 import { MetaProvider } from './MetaContext.js';
 
 export function App() {
@@ -23,6 +25,7 @@ export function App() {
             <NavLink to="/" end>
               开始
             </NavLink>
+            <NavLink to="/multi">联机</NavLink>
             <NavLink to="/codex">图鉴</NavLink>
             <NavLink to="/rules">规则</NavLink>
           </nav>
@@ -31,6 +34,8 @@ export function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/game" element={<Game />} />
+            <Route path="/multi" element={<MultiLobby />} />
+            <Route path="/multi/:code" element={<MultiRoom />} />
             <Route path="/codex" element={<Codex />} />
             <Route path="/rules" element={<Rules />} />
             <Route path="*" element={<Home />} />

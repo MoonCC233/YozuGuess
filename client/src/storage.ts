@@ -38,3 +38,59 @@ export function clearSession(): void {
     // 忽略
   }
 }
+
+const ROOM_KEY = 'yozu:room';
+
+export interface StoredRoom {
+  code: string;
+  key: string;
+  name: string;
+}
+
+/** 记住联机房间身份，刷新或断线后可重连 */
+export function saveRoom(room: StoredRoom): void {
+  try {
+    localStorage.setItem(ROOM_KEY, JSON.stringify(room));
+  } catch {
+    // 忽略
+  }
+}
+
+export function loadRoom(): StoredRoom | null {
+  try {
+    const raw = localStorage.getItem(ROOM_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<StoredRoom>;
+    if (typeof parsed.code !== 'string' || parsed.code === '') return null;
+    if (typeof parsed.key !== 'string' || parsed.key === '') return null;
+    return { code: parsed.code, key: parsed.key, name: typeof parsed.name === 'string' ? parsed.name : '' };
+  } catch {
+    return null;
+  }
+}
+
+export function clearRoom(): void {
+  try {
+    localStorage.removeItem(ROOM_KEY);
+  } catch {
+    // 忽略
+  }
+}
+
+const NAME_KEY = 'yozu:nickname';
+
+export function saveNickname(name: string): void {
+  try {
+    localStorage.setItem(NAME_KEY, name);
+  } catch {
+    // 忽略
+  }
+}
+
+export function loadNickname(): string {
+  try {
+    return localStorage.getItem(NAME_KEY) ?? '';
+  } catch {
+    return '';
+  }
+}

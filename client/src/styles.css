@@ -566,6 +566,207 @@ a.btn {
   transform: translateX(-50%);
 }
 
+/* ===== 联机大厅与房间 ===== */
+.text-input {
+  width: 100%;
+  padding: 12px 16px;
+  font: inherit;
+  color: var(--text);
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.text-input:focus-visible {
+  outline: 2px solid var(--citrus);
+  outline-offset: 2px;
+}
+
+.code-input {
+  flex: 0 1 180px;
+  font-size: 1.2rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.join-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.field-label {
+  margin: 14px 0 8px;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.choice-row .choice-sm {
+  flex: 1 1 130px;
+  padding: 10px 12px;
+}
+
+.checkbox {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-top: 12px;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.card-resume {
+  border-color: var(--citrus-deep);
+}
+
+.room-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.room-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.room-code {
+  padding: 2px 10px;
+  color: var(--citrus);
+  background: var(--bg-soft);
+  border: 1px solid var(--citrus-deep);
+  border-radius: 8px;
+  letter-spacing: 0.18em;
+}
+
+.badge {
+  padding: 4px 10px;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.badge-warn {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.badge-done {
+  color: var(--leaf);
+  border-color: var(--leaf);
+}
+
+.scoreboard {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.score-item {
+  display: grid;
+  flex: 1 1 160px;
+  grid-template-areas: 'name value' 'sub value';
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.score-item.is-me {
+  border-color: var(--citrus);
+}
+
+.score-name {
+  grid-area: name;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-weight: 600;
+}
+
+.score-value {
+  grid-area: value;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--citrus);
+}
+
+.score-sub {
+  grid-area: sub;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+}
+
+.tag {
+  padding: 1px 7px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-dim);
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.tag-warn {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.spectator-line {
+  margin: 0;
+}
+
+.board-block {
+  display: grid;
+  gap: 8px;
+}
+
+.board-title {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0;
+  font-size: 1rem;
+  color: var(--citrus);
+}
+
+.board-compact .cell-value {
+  display: none;
+}
+
+.board-compact .cell {
+  min-width: 44px;
+}
+
+.round-result {
+  padding: 14px 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.round-result h3 {
+  margin: 0 0 6px;
+  color: var(--citrus);
+}
+
+.round-result p {
+  margin: 0;
+}
+
 @media (width <= 640px) {
   .game-head {
     flex-direction: column;
@@ -578,6 +779,10 @@ a.btn {
 
   .dims {
     grid-template-columns: 1fr;
+  }
+
+  .room-head {
+    flex-direction: column;
   }
 }
 

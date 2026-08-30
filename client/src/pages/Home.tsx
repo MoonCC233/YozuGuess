@@ -86,6 +86,9 @@ export function Home() {
             继续上一局
           </button>
         ) : null}
+        <button type="button" className="btn" onClick={() => navigate('/multi')}>
+          联机对战
+        </button>
       </div>
     </section>
   );

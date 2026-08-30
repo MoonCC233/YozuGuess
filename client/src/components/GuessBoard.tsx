@@ -1,4 +1,4 @@
-import type { AttributeFeedback, GuessFeedback } from '@yozu/shared';
+import type { AttributeFeedback, GuessFeedback, HiddenGuessFeedback } from '@yozu/shared';
 import { useTitleLabel } from '../MetaContext.js';
 
 const COLUMNS: Array<{ key: keyof GuessFeedback['attributes']; label: string }> = [
@@ -23,7 +23,11 @@ function hintArrow(hint: AttributeFeedback['hint']): string {
   return '';
 }
 
-function Cell({ attr, text }: { attr: AttributeFeedback; text: string }) {
+function isHidden(guess: GuessFeedback | HiddenGuessFeedback): guess is HiddenGuessFeedback {
+  return 'hidden' in guess && guess.hidden;
+}
+
+function Cell({ attr, text }: { attr: { level: AttributeFeedback['level']; hint?: AttributeFeedback['hint'] }; text: string }) {
   const arrow = hintArrow(attr.hint);
   return (
     <td className={`cell cell-${attr.level}`}>
@@ -41,12 +45,19 @@ function Cell({ attr, text }: { attr: AttributeFeedback; text: string }) {
   );
 }
 
-export function GuessBoard({ guesses, maxGuesses }: { guesses: GuessFeedback[]; maxGuesses: number }) {
+interface Props {
+  guesses: Array<GuessFeedback | HiddenGuessFeedback>;
+  maxGuesses: number;
+  /** 对手视角时隐藏具体数值，只保留颜色与箭头 */
+  compact?: boolean;
+}
+
+export function GuessBoard({ guesses, maxGuesses, compact = false }: Props) {
   const titleLabel = useTitleLabel();
   const emptyRows = Math.max(0, maxGuesses - guesses.length);
 
   return (
-    <div className="board-wrap">
+    <div className={`board-wrap${compact ? ' board-compact' : ''}`}>
       <table className="board">
         <caption className="sr-only">猜测记录，每列显示该属性与答案的对比结果</caption>
         <thead>
@@ -60,18 +71,25 @@ export function GuessBoard({ guesses, maxGuesses }: { guesses: GuessFeedback[]; 
           </tr>
         </thead>
         <tbody>
-          {guesses.map((g) => (
-            <tr key={g.characterId} className={g.correct ? 'row-correct' : undefined}>
-              <th scope="row" className="row-name">
-                {g.name}
-              </th>
-              {COLUMNS.map((c) => {
-                const attr = g.attributes[c.key];
-                const text = c.key === 'title' ? titleLabel(String(attr.value)) : String(attr.value);
-                return <Cell key={c.key} attr={attr} text={text} />;
-              })}
-            </tr>
-          ))}
+          {guesses.map((g, index) => {
+            const hidden = isHidden(g);
+            return (
+              <tr key={hidden ? `hidden-${index}` : g.characterId} className={g.correct ? 'row-correct' : undefined}>
+                <th scope="row" className="row-name">
+                  {hidden ? '？？？' : g.name}
+                </th>
+                {COLUMNS.map((c) => {
+                  const attr = g.attributes[c.key];
+                  const text = hidden
+                    ? ''
+                    : c.key === 'title'
+                      ? titleLabel(String((attr as AttributeFeedback).value))
+                      : String((attr as AttributeFeedback).value);
+                  return <Cell key={c.key} attr={attr} text={text} />;
+                })}
+              </tr>
+            );
+          })}
           {Array.from({ length: emptyRows }, (_, i) => (
             <tr key={`empty-${i}`} className="row-empty">
               <th scope="row" className="row-name">
