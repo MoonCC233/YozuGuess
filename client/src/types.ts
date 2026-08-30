@@ -13,7 +13,7 @@ export interface PlayerInfo {
   name: string;
   nameJp: string;
   title: string;
-  rank: number;
+  rank: string;
   isMain: boolean;
 }
 

@@ -17,7 +17,7 @@ const resources = {
         desc: '根据每次猜测的颜色与箭头反馈，找出系统随机选定的角色。',
         max: '最多', guesses: '8 次猜测',
         green: '绿色 · 完全正确', greenText: '该项与答案一致',
-        yellow: '黄色 · 接近答案', yellowText: '同作品、数值相差不大或相邻区间',
+        yellow: '黄色 · 接近答案', yellowText: '数值相差不大、位次相邻，或声优为同一人的不同化名',
         gray: '灰色 · 不匹配', grayText: '该项与答案差距较大',
         arrow: '箭头 · 调整方向', arrowText: '角色位次、作品年份、爆闪次数应更高或更低',
         columns: {
@@ -82,7 +82,7 @@ const resources = {
         desc: 'Use color and arrow feedback from each guess to identify the randomly selected character.',
         max: 'Up to', guesses: '8 guesses',
         green: 'Green · Exact', greenText: 'This field matches the answer',
-        yellow: 'Yellow · Close', yellowText: 'Same title, nearby value, or adjacent band',
+        yellow: 'Yellow · Close', yellowText: 'Nearby value, adjacent rank, or another alias of the same seiyuu',
         gray: 'Gray · No match', grayText: 'This field is far from the answer',
         arrow: 'Arrows · Direction', arrowText: 'Rank, title year, and bakusen count should be higher or lower',
         columns: {
@@ -147,7 +147,7 @@ const resources = {
         desc: '各予想の色と矢印のフィードバックから、ランダムに選ばれたキャラクターを当てます。',
         max: '最大', guesses: '8回',
         green: '緑 · 完全一致', greenText: 'この項目は答えと一致',
-        yellow: '黄 · 惜しい', yellowText: '同じ作品、近い数値、または隣接帯',
+        yellow: '黄 · 惜しい', yellowText: '近い数値、隣接する位次、または同一声優の別名義',
         gray: '灰 · 不一致', grayText: '答えと差が大きい項目',
         arrow: '矢印 · 方向', arrowText: '位次・作品年・爆闪次数はより高いか低い',
         columns: {

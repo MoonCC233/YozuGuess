@@ -26,8 +26,17 @@ export type HairColor =
   | '红'
   | '紫'
   | '粉'
+  | '粉红'
   | '白'
-  | '绿';
+  | '绿'
+  | '橙'
+  | '黄'
+  | '灰'
+  | '褐'
+  | '紫灰'
+  | '蓝粉渐变'
+  | '紫粉接发'
+  | '棕橙挑染';
 
 /** 瞳色 */
 export type EyeColor =
@@ -38,7 +47,18 @@ export type EyeColor =
   | '金'
   | '紫'
   | '黑'
-  | '异色';
+  | '橙'
+  | '橘'
+  | '黄'
+  | '灰'
+  | '褐'
+  | '茶'
+  | '青'
+  | '银'
+  | '粉'
+  | '深红'
+  | '灰绿'
+  | '未知';
 
 /** 角色数据模型
  * 猜谜维度：角色名(name, 行标签) / 角色位次(rank) / 发色(hair) / 瞳色(eyes) / 作品年份(titleYear) / 爆闪次数(bakusen) / 声优(cv)
@@ -48,11 +68,11 @@ export interface Character {
   name: string; // 中文名
   nameJp: string; // 日文名
   title: GameTitle;
-  rank: string; // 角色位次（女主角为数字字符串如 '1'；次要角色为 '次要'）
-  bakusen: number; // 爆闪次数（成人向名场面计数，占位数据）
+  rank: string; // 角色位次（女主角为 '一号位'~'七号位'；其余为 '主角' / '次要' / '配角'）
+  bakusen: number; // 爆闪次数
   hair: HairColor;
   eyes: EyeColor;
-  cv: string; // 声优（配音演员），未知时为 '未知'
+  cv: string; // 声优（配音演员，使用作品署名的化名），未知时为 '未知'，男主角为 '无'
   isMain: boolean; // 是否女主角/主要可猜角色
 }
 
@@ -98,5 +118,11 @@ export const GAME_TITLES: Record<GameTitle, { zh: string; jp: string; short: str
   limelight: { zh: 'LimeLight Lemonade Jam', jp: 'ライムライト・レモネードジャム', short: 'Lime', year: 2023 },
 };
 
-export const HAIR_COLORS: HairColor[] = ['黑', '棕', '金', '银', '蓝', '红', '紫', '粉', '白', '绿'];
-export const EYE_COLORS: EyeColor[] = ['蓝', '红', '绿', '棕', '金', '紫', '黑', '异色'];
+export const HAIR_COLORS: HairColor[] = [
+  '黑', '棕', '金', '银', '蓝', '红', '紫', '粉', '粉红', '白', '绿',
+  '橙', '黄', '灰', '褐', '紫灰', '蓝粉渐变', '紫粉接发', '棕橙挑染',
+];
+export const EYE_COLORS: EyeColor[] = [
+  '蓝', '红', '绿', '棕', '金', '紫', '黑', '橙', '橘', '黄',
+  '灰', '褐', '茶', '青', '银', '粉', '深红', '灰绿', '未知',
+];

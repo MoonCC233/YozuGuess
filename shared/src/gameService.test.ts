@@ -6,7 +6,7 @@ function make(partial: Partial<Character> & Pick<Character, 'id' | 'name'>): Cha
   return {
     nameJp: '',
     title: 'sannabitch',
-    rank: '1',
+    rank: '一号位',
     bakusen: 16,
     hair: '黑',
     eyes: '蓝',
@@ -20,7 +20,7 @@ const target = make({
   id: 1,
   name: '目标',
   title: 'sannabitch',
-  rank: '1',
+  rank: '一号位',
   bakusen: 16,
   hair: '黑',
   eyes: '蓝',
@@ -65,10 +65,46 @@ describe('compareGuess', () => {
   });
 
   it('rank within close range yields close with direction hint', () => {
-    const other = make({ id: 2, name: '其他', rank: '15' }); // diff 14 <= 20
+    const other = make({ id: 2, name: '其他', rank: '二号位' }); // diff 1 <= 1
     const fb = compareGuess(other, target);
     expect(fb.attributes.rank.level).toBe('close');
     expect(fb.attributes.rank.hint).toBe('lower');
+  });
+
+  it('rank far outside range yields wrong with direction hint', () => {
+    const other = make({ id: 2, name: '其他', rank: '五号位' });
+    const fb = compareGuess(other, target);
+    expect(fb.attributes.rank.level).toBe('wrong');
+    expect(fb.attributes.rank.hint).toBe('lower');
+  });
+
+  it('non-ordinal rank falls back to exact text match', () => {
+    const other = make({ id: 2, name: '其他', rank: '配角' });
+    const fb = compareGuess(other, target);
+    expect(fb.attributes.rank.level).toBe('wrong');
+    expect(fb.attributes.rank.hint).toBeUndefined();
+
+    const sameText = compareGuess(make({ id: 3, name: '同类', rank: '配角' }), make({ id: 4, name: '目标2', rank: '配角' }));
+    expect(sameText.attributes.rank.level).toBe('correct');
+  });
+
+  it('different cv alias of the same seiyuu yields close', () => {
+    const nene = make({ id: 10, name: '绫地宁宁', cv: '桐谷华' });
+    const other = make({ id: 11, name: '沢泽同人', cv: '沢泽砂羽' });
+    const fb = compareGuess(other, nene);
+    expect(fb.attributes.cv.level).toBe('close');
+    expect(fb.attributes.cv.hint).toBeUndefined();
+  });
+
+  it('same cv alias yields correct, unrelated cv yields wrong', () => {
+    const nene = make({ id: 10, name: '绫地宁宁', cv: '桐谷华' });
+    expect(compareGuess(make({ id: 12, name: '同声优', cv: '桐谷华' }), nene).attributes.cv.level).toBe('correct');
+    expect(compareGuess(make({ id: 13, name: '无关', cv: '风音' }), nene).attributes.cv.level).toBe('wrong');
+  });
+
+  it('cv placeholders are never treated as the same person', () => {
+    const unknown = make({ id: 14, name: '未知声优', cv: '未知' });
+    expect(compareGuess(make({ id: 15, name: '男主', cv: '无' }), unknown).attributes.cv.level).toBe('wrong');
   });
 
   it('titleYear derived from GAME_TITLES; different title yields wrong', () => {

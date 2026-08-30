@@ -12,7 +12,7 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && node ./scripts/copy-json.mjs",
     "dev": "tsc -p tsconfig.json --watch",
     "test": "vitest run"
   },

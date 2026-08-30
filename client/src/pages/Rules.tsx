@@ -33,12 +33,16 @@ export default function Rules() {
 
       <div className="rule-panels">
         <article className="rule-panel">
-          <div className="rule-panel-title"><Target size={18} /> {t('rules.columns.title')} / {t('rules.columns.hair')} / {t('rules.columns.eyes')} / {t('rules.columns.cv')}</div>
+          <div className="rule-panel-title"><Target size={18} /> {t('rules.columns.title')} / {t('rules.columns.hair')} / {t('rules.columns.eyes')}</div>
           <p>完全一致才显示绿色；否则灰色。</p>
         </article>
         <article className="rule-panel">
           <div className="rule-panel-title"><Target size={18} /> {t('rules.columns.rank')} / {t('rules.columns.titleYear')} / {t('rules.columns.bakusen')}</div>
-          <p>数值相差在阈值内显示黄色并带方向箭头；差距过大显示灰色。</p>
+          <p>数值相差在阈值内显示黄色并带方向箭头；差距过大显示灰色。位次按「一号位～七号位」比较，相邻号位为黄色。</p>
+        </article>
+        <article className="rule-panel">
+          <div className="rule-panel-title"><Target size={18} /> {t('rules.columns.cv')}</div>
+          <p>化名完全一致显示绿色；虽为不同化名但实为同一位声优时显示黄色；否则灰色。</p>
         </article>
       </div>
     </div>
