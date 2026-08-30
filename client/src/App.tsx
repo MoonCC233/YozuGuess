@@ -6,6 +6,7 @@ import { Rules } from './pages/Rules.js';
 import { MultiLobby } from './pages/MultiLobby.js';
 import { MultiRoom } from './pages/MultiRoom.js';
 import { MetaProvider } from './MetaContext.js';
+import { brandLogo } from './brandLogo.js';
 
 export function App() {
   return (
@@ -13,9 +14,7 @@ export function App() {
       <div className="app">
         <header className="topbar">
           <NavLink to="/" className="brand" aria-label="柚一把 首页">
-            <span className="brand-mark" aria-hidden="true">
-              柚
-            </span>
+            <img className="brand-mark" src={brandLogo} alt="" aria-hidden="true" width={38} height={38} />
             <span className="brand-text">
               柚一把
               <small>YozuGuess</small>
