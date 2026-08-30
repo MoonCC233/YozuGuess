@@ -231,6 +231,22 @@ body {
   color: var(--text-dim);
 }
 
+/* 四档难度：宽屏并排四列，窄屏两列 */
+.choice-quad {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.choice-tier {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+
+.choice-label {
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;
@@ -602,6 +618,10 @@ a.btn {
 
 .choice-row .choice-sm {
   flex: 1 1 130px;
+  padding: 10px 12px;
+}
+
+.choice-quad .choice-sm {
   padding: 10px 12px;
 }
 

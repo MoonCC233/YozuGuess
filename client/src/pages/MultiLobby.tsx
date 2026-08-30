@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BO_TYPES, type BoType } from '@yozu/shared';
+import { BO_TYPES, DIFFICULTIES, DIFFICULTY_META, type BoType } from '@yozu/shared';
 import type { Difficulty } from '../api.js';
 import { useMeta } from '../MetaContext.js';
 import { useAuth } from '../AuthContext.js';
@@ -22,7 +22,7 @@ export function MultiLobby() {
   const { user, loading: authLoading } = useAuth();
   const [code, setCode] = useState('');
   const [boType, setBoType] = useState<BoType>(3);
-  const [difficulty, setDifficulty] = useState<Difficulty>('heroine');
+  const [difficulty, setDifficulty] = useState<Difficulty>('easy');
   const [spectator, setSpectator] = useState(false);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -169,27 +169,29 @@ export function MultiLobby() {
         </div>
 
         <h3 className="field-label">难度</h3>
-        <div className="choice-group choice-row" role="radiogroup" aria-label="难度">
-          <button
-            type="button"
-            role="radio"
-            aria-checked={difficulty === 'heroine'}
-            className={`choice choice-sm ${difficulty === 'heroine' ? 'selected' : ''}`}
-            onClick={() => setDifficulty('heroine')}
-          >
-            <strong>简单版</strong>
-            <span>可攻略女主角{meta ? `（${meta.poolSizes.heroine} 位）` : ''}</span>
-          </button>
-          <button
-            type="button"
-            role="radio"
-            aria-checked={difficulty === 'full'}
-            className={`choice choice-sm ${difficulty === 'full' ? 'selected' : ''}`}
-            onClick={() => setDifficulty('full')}
-          >
-            <strong>完整版</strong>
-            <span>全部角色{meta ? `（${meta.poolSizes.full} 位）` : ''}</span>
-          </button>
+        <div className="choice-group choice-quad" role="radiogroup" aria-label="难度">
+          {DIFFICULTIES.map((id) => {
+            const info = meta?.difficulties.find((d) => d.id === id) ?? DIFFICULTY_META[id];
+            const size = meta?.poolSizes[id];
+            return (
+              <button
+                key={id}
+                type="button"
+                role="radio"
+                aria-checked={difficulty === id}
+                aria-label={`${info.tier} ${info.label}`}
+                className={`choice choice-sm ${difficulty === id ? 'selected' : ''}`}
+                onClick={() => setDifficulty(id)}
+              >
+                <small className="choice-tier">{info.tier}</small>
+                <strong className="choice-label">{info.label}</strong>
+                <span>
+                  {info.desc}
+                  {size ? `（${size} 位）` : ''}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         <div className="actions">

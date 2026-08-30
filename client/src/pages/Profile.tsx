@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { difficultyLabel } from '@yozu/shared';
 import {
   ApiError,
   changeAccountPassword,
@@ -240,8 +241,8 @@ export function Profile() {
                 <span className="history-main">
                   {g.answerName}
                   <small>
-                    {g.mode === 'daily' ? '每日一柚' : '自由练习'} ·{' '}
-                    {g.difficulty === 'heroine' ? '简单版' : '完整版'} · {g.guessCount} 次
+                    {g.mode === 'daily' ? '每日一柚' : '自由练习'} · {difficultyLabel(g.difficulty)} ·{' '}
+                    {g.guessCount} 次
                   </small>
                 </span>
                 <span className="history-time">{formatDate(g.createdAt)}</span>
@@ -263,7 +264,7 @@ export function Profile() {
                 <span className="history-main">
                   {m.ownScore} : {m.rivalScore}
                   <small>
-                    BO{m.boType} · {m.difficulty === 'heroine' ? '简单版' : '完整版'} ·{' '}
+                    BO{m.boType} · {difficultyLabel(m.difficulty)} ·{' '}
                     {m.opponents.length > 0 ? `对手 ${m.opponents.join('、')}` : '无对手'}
                     {m.reason === 'forfeit' ? ' · 对手弃权' : ''}
                   </small>

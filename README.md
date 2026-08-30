@@ -38,12 +38,18 @@
 
 ### 难度
 
-| 难度 | 答案池 |
-| --- | --- |
-| 简单版 | 仅可攻略女主角（72 位） |
-| 完整版 | 全部角色，含男主角与配角（167 位） |
+四档阶层，答案池逐级放宽：
 
-两种难度都允许猜任意角色，方便用配角试探属性。
+| 阶层 | 花名 | 答案池 | 人数 |
+| --- | --- | --- | --- |
+| 简单模式 | `Zako♥~` | 四大名著全角色（魔女的夜宴、千恋*万花、RIDDLE JOKER、星光咖啡馆与死神之蝶） | 45 |
+| 普通模式 | `雑魚♥~` | 四大名著 + 天使☆嚣嚣 RE-BOOT、LimeLight Lemonade Jam、天色幻想岛、DRACU-RIOT! 共八部全角色 | 101 |
+| 困难模式 | `⚡电 电⚡` | 全部作品的可攻略角色 | 72 |
+| 地狱模式 | `柚~来~` | 全部作品全角色，含男主角与配角 | 167 |
+
+四档都允许猜任意角色，方便用池外配角试探属性。
+
+接口取值为 `easy` / `normal` / `hard` / `hell`。早期版本的 `heroine` / `full` 已由数据库迁移（`user_version` 2）按等价语义改写为 `hard` / `hell`，历史战绩不会丢。
 
 ## 联机对战
 
@@ -84,7 +90,7 @@
 
 | 事件 | 方向 | 载荷 | 说明 |
 | --- | --- | --- | --- |
-| `room:create` | C → S | `{ boType, difficulty }` | 建房（需登录，名字取账号用户名），返回 `{ code, key, room }` |
+| `room:create` | C → S | `{ boType, difficulty }` | 建房（需登录，名字取账号用户名；`difficulty` 取 `easy` / `normal` / `hard` / `hell`），返回 `{ code, key, room }` |
 | `room:join` | C → S | `{ code, spectator }` | 加入房间（需登录），返回 `{ code, key, room }` |
 | `room:rejoin` | C → S | `{ code, key }` | 断线重连认领座位 |
 | `room:start` | C → S | — | 房主开始下一小局（整场已结束时自动先重置） |
@@ -130,7 +136,7 @@
 
 ### 数据表
 
-SQLite 文件默认落在 `server/data/yozu.db`（`DB_PATH` 可改），首次启动自动建表。
+SQLite 文件默认落在 `server/data/yozu.db`（`DB_PATH` 可改），首次启动自动建表。结构版本记在 `PRAGMA user_version` 里，启动时按需增量迁移。
 
 | 表 | 用途 |
 | --- | --- |
@@ -196,11 +202,11 @@ pnpm start      # http://localhost:3000
 | 端点 | 说明 |
 | --- | --- |
 | `GET /api/health` | 健康检查 |
-| `GET /api/meta` | 最大猜测次数、作品元数据、各难度答案池大小 |
+| `GET /api/meta` | 最大猜测次数、作品元数据、四档难度描述（`difficulties`）与各档答案池大小（`poolSizes`） |
 | `GET /api/characters` | 猜测用角色列表（仅 `id` / `name` / `nameJp`，不含答案属性） |
 | `GET /api/characters/search?q=` | 按中/日文名模糊搜索 |
 | `GET /api/codex` | 图鉴：完整角色资料 + 声优同人化名 |
-| `POST /api/game/start` | 开始对局，body: `{ mode, difficulty }` |
+| `POST /api/game/start` | 开始对局，body: `{ mode, difficulty }`，`difficulty` 取 `easy` / `normal` / `hard` / `hell` |
 | `GET /api/game/:sessionId` | 读取进行中的对局（未结束时不返回答案） |
 | `POST /api/game/guess` | 提交猜测，body: `{ sessionId, characterId }` |
 | `POST /api/game/reveal` | 放弃并公布答案，body: `{ sessionId }` |

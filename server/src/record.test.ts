@@ -92,11 +92,11 @@ function waitForState(
 describe('solo game recording', () => {
   it('records a win for a signed-in player', async () => {
     const { id, cookie } = await signIn('记录者');
-    const answer = pickDailyAnswer('heroine', toDateKey(new Date()));
+    const answer = pickDailyAnswer('easy', toDateKey(new Date()));
     const start = await request(server.http)
       .post('/api/game/start')
       .set('Cookie', cookie)
-      .send({ mode: 'daily', difficulty: 'heroine' })
+      .send({ mode: 'daily', difficulty: 'easy' })
       .expect(201);
     await request(server.http)
       .post('/api/game/guess')
@@ -113,11 +113,11 @@ describe('solo game recording', () => {
 
   it('records a loss after running out of guesses', async () => {
     const { id, cookie } = await signIn('输家');
-    const answer = pickDailyAnswer('heroine', toDateKey(new Date()));
+    const answer = pickDailyAnswer('easy', toDateKey(new Date()));
     const start = await request(server.http)
       .post('/api/game/start')
       .set('Cookie', cookie)
-      .send({ mode: 'daily', difficulty: 'heroine' })
+      .send({ mode: 'daily', difficulty: 'easy' })
       .expect(201);
     const wrong = CHARACTERS.filter((c) => c.id !== answer.id).slice(0, MAX_GUESSES);
     for (const c of wrong) {
@@ -136,7 +136,7 @@ describe('solo game recording', () => {
     const start = await request(server.http)
       .post('/api/game/start')
       .set('Cookie', cookie)
-      .send({ mode: 'free', difficulty: 'heroine' })
+      .send({ mode: 'free', difficulty: 'easy' })
       .expect(201);
     await request(server.http)
       .post('/api/game/reveal')
@@ -155,12 +155,12 @@ describe('solo game recording', () => {
 
   it('keeps only the first daily result but records every free game', async () => {
     const { id, cookie } = await signIn('每日党');
-    const answer = pickDailyAnswer('heroine', toDateKey(new Date()));
+    const answer = pickDailyAnswer('easy', toDateKey(new Date()));
     for (let i = 0; i < 2; i += 1) {
       const start = await request(server.http)
         .post('/api/game/start')
         .set('Cookie', cookie)
-        .send({ mode: 'daily', difficulty: 'heroine' })
+        .send({ mode: 'daily', difficulty: 'easy' })
         .expect(201);
       await request(server.http)
         .post('/api/game/guess')
@@ -174,7 +174,7 @@ describe('solo game recording', () => {
       const start = await request(server.http)
         .post('/api/game/start')
         .set('Cookie', cookie)
-        .send({ mode: 'free', difficulty: 'heroine' })
+        .send({ mode: 'free', difficulty: 'easy' })
         .expect(201);
       await request(server.http)
         .post('/api/game/reveal')
@@ -188,7 +188,7 @@ describe('solo game recording', () => {
   it('records nothing for an anonymous player', async () => {
     const start = await request(server.http)
       .post('/api/game/start')
-      .send({ mode: 'free', difficulty: 'heroine' })
+      .send({ mode: 'free', difficulty: 'easy' })
       .expect(201);
     await request(server.http)
       .post('/api/game/reveal')
@@ -207,7 +207,7 @@ describe('match recording', () => {
     const guestSocket = await client(guest.cookie);
     const created = await emit<{ code: string; key: string }>(hostSocket, 'room:create', {
       boType: 1,
-      difficulty: 'heroine',
+      difficulty: 'easy',
     });
     if (!created.ok) throw new Error(created.error);
     const joined = await emit<{ key: string }>(guestSocket, 'room:join', {

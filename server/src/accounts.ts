@@ -1,6 +1,6 @@
 import { randomBytes, scryptSync, timingSafeEqual, createHash } from 'node:crypto';
 import type { DatabaseSync } from 'node:sqlite';
-import type { BoType, MatchEndReason, RoundEndReason } from '@yozu/shared';
+import type { BoType, Difficulty, MatchEndReason, RoundEndReason } from '@yozu/shared';
 import { getDb } from './db.js';
 import { config } from './config.js';
 
@@ -236,7 +236,7 @@ export type SoloOutcome = 'won' | 'lost' | 'revealed';
 export interface SoloRecordInput {
   userId: number;
   mode: 'free' | 'daily';
-  difficulty: 'heroine' | 'full';
+  difficulty: Difficulty;
   status: SoloOutcome;
   guessCount: number;
   answerId: number;
@@ -279,7 +279,7 @@ export interface MatchRecordInput {
   userId: number;
   roomCode: string;
   boType: BoType;
-  difficulty: 'heroine' | 'full';
+  difficulty: Difficulty;
   result: MatchOutcome;
   ownScore: number;
   rivalScore: number;
@@ -413,7 +413,7 @@ export function getStats(userId: number, maxGuesses: number): AccountStats {
 export interface SoloHistoryItem {
   id: number;
   mode: 'free' | 'daily';
-  difficulty: 'heroine' | 'full';
+  difficulty: Difficulty;
   status: SoloOutcome;
   guessCount: number;
   answerId: number;
@@ -427,7 +427,7 @@ export interface MatchHistoryItem {
   id: number;
   roomCode: string;
   boType: number;
-  difficulty: 'heroine' | 'full';
+  difficulty: Difficulty;
   result: MatchOutcome;
   ownScore: number;
   rivalScore: number;

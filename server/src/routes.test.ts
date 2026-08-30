@@ -1,6 +1,14 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
-import { CHARACTERS, MAX_GUESSES, pickDailyAnswer, toDateKey } from '@yozu/shared';
+import {
+  CHARACTERS,
+  DIFFICULTIES,
+  DIFFICULTY_META,
+  MAX_GUESSES,
+  getAnswerPool,
+  pickDailyAnswer,
+  toDateKey,
+} from '@yozu/shared';
 import { createApp } from './app.js';
 import { resetSessions } from './gameStore.js';
 import { resetRateLimits } from './rateLimit.js';
@@ -32,8 +40,24 @@ describe('meta endpoints', () => {
     const res = await request(app).get('/api/meta').expect(200);
     expect(res.body.maxGuesses).toBe(MAX_GUESSES);
     expect(res.body.totalCharacters).toBe(CHARACTERS.length);
-    expect(res.body.poolSizes.full).toBe(CHARACTERS.length);
-    expect(res.body.poolSizes.heroine).toBeGreaterThan(0);
+    expect(res.body.poolSizes.hell).toBe(CHARACTERS.length);
+    expect(res.body.poolSizes.easy).toBe(getAnswerPool('easy').length);
+    expect(res.body.poolSizes.normal).toBe(getAnswerPool('normal').length);
+    expect(res.body.poolSizes.hard).toBe(getAnswerPool('hard').length);
+    expect(res.body.poolSizes.easy).toBeLessThan(res.body.poolSizes.normal);
+  });
+
+  it('describes the four difficulty tiers in order', async () => {
+    const res = await request(app).get('/api/meta').expect(200);
+    expect(res.body.difficulties.map((d: { id: string }) => d.id)).toEqual([...DIFFICULTIES]);
+    const easy = res.body.difficulties[0];
+    expect(easy.label).toBe(DIFFICULTY_META.easy.label);
+    expect(easy.tier).toBe(DIFFICULTY_META.easy.tier);
+    expect(easy.titles).toEqual(DIFFICULTY_META.easy.titles);
+    expect(easy.poolSize).toBe(getAnswerPool('easy').length);
+    const hard = res.body.difficulties[2];
+    expect(hard.titles).toBeNull();
+    expect(hard.heroineOnly).toBe(true);
   });
 
   it('character list hides answer attributes', async () => {
@@ -61,7 +85,7 @@ describe('meta endpoints', () => {
 
 describe('game lifecycle', () => {
   it('starts a game without leaking the answer', async () => {
-    const state = await startGame({ mode: 'free', difficulty: 'heroine' });
+    const state = await startGame({ mode: 'free', difficulty: 'easy' });
     expect(state.status).toBe('playing');
     expect(state.answer).toBeNull();
     expect(state.remaining).toBe(MAX_GUESSES);
@@ -72,6 +96,21 @@ describe('game lifecycle', () => {
       .post('/api/game/start')
       .send({ difficulty: 'nightmare' })
       .expect(400, { code: 'INVALID_PAYLOAD' });
+    await request(app)
+      .post('/api/game/start')
+      .send({ difficulty: 'heroine' })
+      .expect(400, { code: 'INVALID_PAYLOAD' });
+  });
+
+  it('accepts every difficulty tier and keeps daily answers inside the pool', async () => {
+    const dateKey = toDateKey(new Date());
+    for (const id of DIFFICULTIES) {
+      const state = await startGame({ mode: 'free', difficulty: id });
+      expect(state.status).toBe('playing');
+      const pool = getAnswerPool(id);
+      const answer = pickDailyAnswer(id, dateKey);
+      expect(pool.some((c) => c.id === answer.id)).toBe(true);
+    }
   });
 
   it('returns feedback for a guess and keeps it in state', async () => {
@@ -110,8 +149,8 @@ describe('game lifecycle', () => {
 
   it('wins when guessing the daily answer and reveals it', async () => {
     const dateKey = toDateKey(new Date());
-    const answer = pickDailyAnswer('heroine', dateKey);
-    const state = await startGame({ mode: 'daily', difficulty: 'heroine' });
+    const answer = pickDailyAnswer('easy', dateKey);
+    const state = await startGame({ mode: 'daily', difficulty: 'easy' });
     const res = await request(app)
       .post('/api/game/guess')
       .send({ sessionId: state.sessionId, characterId: answer.id })
@@ -122,8 +161,8 @@ describe('game lifecycle', () => {
   });
 
   it('locks the game after a win', async () => {
-    const answer = pickDailyAnswer('heroine', toDateKey(new Date()));
-    const state = await startGame({ mode: 'daily', difficulty: 'heroine' });
+    const answer = pickDailyAnswer('easy', toDateKey(new Date()));
+    const state = await startGame({ mode: 'daily', difficulty: 'easy' });
     await request(app)
       .post('/api/game/guess')
       .send({ sessionId: state.sessionId, characterId: answer.id })
@@ -136,8 +175,8 @@ describe('game lifecycle', () => {
   });
 
   it('loses after MAX_GUESSES wrong guesses and exposes the answer', async () => {
-    const answer = pickDailyAnswer('heroine', toDateKey(new Date()));
-    const state = await startGame({ mode: 'daily', difficulty: 'heroine' });
+    const answer = pickDailyAnswer('easy', toDateKey(new Date()));
+    const state = await startGame({ mode: 'daily', difficulty: 'easy' });
     const wrong = CHARACTERS.filter((c) => c.id !== answer.id).slice(0, MAX_GUESSES);
     let last;
     for (const c of wrong) {
@@ -166,8 +205,8 @@ describe('game lifecycle', () => {
   });
 
   it('daily mode uses the same answer across sessions', async () => {
-    const a = await startGame({ mode: 'daily', difficulty: 'full' });
-    const b = await startGame({ mode: 'daily', difficulty: 'full' });
+    const a = await startGame({ mode: 'daily', difficulty: 'hell' });
+    const b = await startGame({ mode: 'daily', difficulty: 'hell' });
     const ra = await request(app).post('/api/game/reveal').send({ sessionId: a.sessionId }).expect(200);
     const rb = await request(app).post('/api/game/reveal').send({ sessionId: b.sessionId }).expect(200);
     expect(ra.body.state.answer.id).toBe(rb.body.state.answer.id);

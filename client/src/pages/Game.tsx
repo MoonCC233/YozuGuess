@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { difficultyLabel, isDifficulty } from '@yozu/shared';
 import {
   ApiError,
   fetchCharacters,
@@ -24,7 +25,7 @@ function parseMode(value: string | null): GameMode {
 }
 
 function parseDifficulty(value: string | null): Difficulty {
-  return value === 'full' ? 'full' : 'heroine';
+  return isDifficulty(value) ? value : 'easy';
 }
 
 export function Game() {
@@ -154,8 +155,7 @@ export function Game() {
       <header className="game-head">
         <div>
           <h1 className="title-sm">
-            {state.mode === 'daily' ? '每日一柚' : '自由练习'} ·{' '}
-            {state.difficulty === 'heroine' ? '简单版' : '完整版'}
+            {state.mode === 'daily' ? '每日一柚' : '自由练习'} · {difficultyLabel(state.difficulty)}
           </h1>
           {state.mode === 'daily' && state.dateKey ? <p className="muted">今日题目：{state.dateKey}</p> : null}
         </div>

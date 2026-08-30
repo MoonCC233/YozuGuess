@@ -1,4 +1,6 @@
+import { Fragment } from 'react';
 import { Link } from 'react-router-dom';
+import { DIFFICULTIES, DIFFICULTY_META, GAME_TITLES } from '@yozu/shared';
 import { useMeta } from '../MetaContext.js';
 
 export function Rules() {
@@ -58,10 +60,27 @@ export function Rules() {
         <h2>模式与难度</h2>
         <p>
           <strong>自由练习</strong>每局随机抽题，<strong>每日一柚</strong>当天全网同一个答案。
-          难度分<strong>简单版</strong>（只从可攻略女主角中抽取{meta ? ` ${meta.poolSizes.heroine} 位` : ''}）
-          和<strong>完整版</strong>（全部{meta ? ` ${meta.poolSizes.full} ` : ''}位角色）。
-          两种难度都允许猜任意角色，方便用配角试探属性。
+          难度共四个阶层，只影响<strong>答案池</strong>；任何难度都允许猜任意角色，方便用配角试探属性。
         </p>
+        <dl className="dims">
+          {DIFFICULTIES.map((id) => {
+            const info = meta?.difficulties.find((d) => d.id === id) ?? DIFFICULTY_META[id];
+            const size = meta?.poolSizes[id];
+            return (
+              <Fragment key={id}>
+                <dt>
+                  {info.tier} · {info.label}
+                </dt>
+                <dd>
+                  {info.titles === null
+                    ? info.desc
+                    : `${info.desc}（${info.titles.map((t) => meta?.titles[t]?.zh ?? GAME_TITLES[t].zh).join('、')}）`}
+                  {size ? `，共 ${size} 位` : ''}
+                </dd>
+              </Fragment>
+            );
+          })}
+        </dl>
       </div>
 
       <div className="card">

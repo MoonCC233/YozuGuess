@@ -1,7 +1,7 @@
-import type { Character, GameTitle, GuessFeedback } from '@yozu/shared';
+import type { Character, Difficulty, DifficultyMeta, GameTitle, GuessFeedback } from '@yozu/shared';
 
 export type GameMode = 'free' | 'daily';
-export type Difficulty = 'heroine' | 'full';
+export type { Difficulty };
 export type GameStatus = 'playing' | 'won' | 'lost' | 'revealed';
 
 export interface GameState {
@@ -30,9 +30,14 @@ export interface TitleMeta {
   year: number;
 }
 
+export interface DifficultyInfo extends DifficultyMeta {
+  poolSize: number;
+}
+
 export interface MetaInfo {
   maxGuesses: number;
   titles: Record<GameTitle, TitleMeta>;
+  difficulties: DifficultyInfo[];
   poolSizes: Record<Difficulty, number>;
   totalCharacters: number;
 }

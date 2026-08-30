@@ -1,3 +1,4 @@
+import { isDifficulty } from '@yozu/shared';
 import type { Difficulty, GameMode } from './api.js';
 
 const KEY = 'yozu:session';
@@ -24,7 +25,7 @@ export function loadSession(): StoredSession | null {
     const parsed = JSON.parse(raw) as Partial<StoredSession>;
     if (typeof parsed.sessionId !== 'string' || parsed.sessionId === '') return null;
     const mode: GameMode = parsed.mode === 'daily' ? 'daily' : 'free';
-    const difficulty: Difficulty = parsed.difficulty === 'full' ? 'full' : 'heroine';
+    const difficulty: Difficulty = isDifficulty(parsed.difficulty) ? parsed.difficulty : 'easy';
     return { sessionId: parsed.sessionId, mode, difficulty };
   } catch {
     return null;

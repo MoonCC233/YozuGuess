@@ -1,22 +1,88 @@
-import type { Character } from './types.js';
+import type { Character, GameTitle } from './types.js';
 import { CHARACTERS } from './characters.js';
 
-/** 猜谜难度：
- * - heroine：仅可攻略女主角（isMain=true），适合新手
- * - full：全部角色（含男主角、配角），完整版
- */
-export type Difficulty = 'heroine' | 'full';
+/** 猜谜难度，从易到难四个阶层 */
+export const DIFFICULTIES = ['easy', 'normal', 'hard', 'hell'] as const;
 
-export const DIFFICULTIES: Difficulty[] = ['heroine', 'full'];
+export type Difficulty = (typeof DIFFICULTIES)[number];
+
+/** 「四大名著」：夜宴、万花、RIDDLE、Stella */
+export const FOUR_CLASSICS: GameTitle[] = ['sannabitch', 'sengoku', 'riddle', 'stella'];
+
+/** 普通模式的八部作品：四大名著 + 天使、Lime、天色、DRACU */
+export const EIGHT_TITLES: GameTitle[] = [
+  ...FOUR_CLASSICS,
+  'rebo',
+  'limelight',
+  'ailenote',
+  'dracu',
+];
+
+export interface DifficultyMeta {
+  id: Difficulty;
+  /** 阶层名，如「简单模式」 */
+  tier: string;
+  /** 花名，界面上的主标签 */
+  label: string;
+  /** 一句话说明答案池范围 */
+  desc: string;
+  /** 限定的作品，null 表示全部作品 */
+  titles: GameTitle[] | null;
+  /** 是否只抽可攻略角色 */
+  heroineOnly: boolean;
+}
+
+export const DIFFICULTY_META: Record<Difficulty, DifficultyMeta> = {
+  easy: {
+    id: 'easy',
+    tier: '简单模式',
+    label: 'Zako♥~',
+    desc: '四大名著全角色',
+    titles: FOUR_CLASSICS,
+    heroineOnly: false,
+  },
+  normal: {
+    id: 'normal',
+    tier: '普通模式',
+    label: '雑魚♥~',
+    desc: '八部作品全角色',
+    titles: EIGHT_TITLES,
+    heroineOnly: false,
+  },
+  hard: {
+    id: 'hard',
+    tier: '困难模式',
+    label: '⚡电 电⚡',
+    desc: '全作品可攻略角色',
+    titles: null,
+    heroineOnly: true,
+  },
+  hell: {
+    id: 'hell',
+    tier: '地狱模式',
+    label: '柚~来~',
+    desc: '全作品全角色',
+    titles: null,
+    heroineOnly: false,
+  },
+};
 
 export function isDifficulty(value: unknown): value is Difficulty {
-  return typeof value === 'string' && (DIFFICULTIES as string[]).includes(value);
+  return typeof value === 'string' && (DIFFICULTIES as readonly string[]).includes(value);
+}
+
+/** 难度花名；遇到历史遗留的未知值时原样返回 */
+export function difficultyLabel(value: string): string {
+  return isDifficulty(value) ? DIFFICULTY_META[value].label : value;
 }
 
 /** 答案池：按难度筛选可作为谜题答案的角色 */
 export function getAnswerPool(difficulty: Difficulty): Character[] {
-  if (difficulty === 'heroine') return CHARACTERS.filter((c) => c.isMain);
-  return CHARACTERS;
+  const meta = DIFFICULTY_META[difficulty];
+  const titles = meta.titles;
+  return CHARACTERS.filter(
+    (c) => (!meta.heroineOnly || c.isMain) && (titles === null || titles.includes(c.title))
+  );
 }
 
 /** 可猜列表：任何难度都允许猜全部角色（便于用配角试探属性） */

@@ -63,6 +63,14 @@ const MIGRATIONS: string[] = [
   );
   CREATE INDEX idx_match_records_user ON match_records(user_id, created_at DESC);
   `,
+  // 2: 难度从两档（heroine/full）改为四档，旧值按等价语义迁移
+  //    heroine = 全作品可攻略角色 -> hard；full = 全作品全角色 -> hell
+  `
+  UPDATE game_records SET difficulty = 'hard' WHERE difficulty = 'heroine';
+  UPDATE game_records SET difficulty = 'hell' WHERE difficulty = 'full';
+  UPDATE match_records SET difficulty = 'hard' WHERE difficulty = 'heroine';
+  UPDATE match_records SET difficulty = 'hell' WHERE difficulty = 'full';
+  `,
 ];
 
 function resolveDbPath(file: string): string {
@@ -73,7 +81,11 @@ function resolveDbPath(file: string): string {
   return resolved;
 }
 
-function migrate(db: DatabaseSync): void {
+/** 只在测试里用得到：暴露迁移脚本以便构造历史版本的库 */
+export const MIGRATION_SQL: readonly string[] = MIGRATIONS;
+
+/** 把库升级到最新结构版本；openDatabase 会自动调用 */
+export function migrate(db: DatabaseSync): void {
   const row = db.prepare('PRAGMA user_version').get() as { user_version?: number } | undefined;
   const current = Number(row?.user_version ?? 0);
   for (let version = current; version < MIGRATIONS.length; version += 1) {

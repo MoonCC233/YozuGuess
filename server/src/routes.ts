@@ -2,12 +2,15 @@ import { Router, type Router as ExpressRouter } from 'express';
 import { z } from 'zod';
 import {
   CHARACTERS,
+  DIFFICULTIES,
+  DIFFICULTY_META,
   GAME_TITLES,
   MAX_GUESSES,
   getAnswerPool,
   getCvAliases,
   searchCharacters,
   type Character,
+  type Difficulty,
 } from '@yozu/shared';
 import { getGame, revealAnswer, startGame, submitGuess } from './gameStore.js';
 import { rateLimit } from './rateLimit.js';
@@ -39,7 +42,7 @@ const writeLimit = rateLimit({
 
 const startSchema = z.object({
   mode: z.enum(['free', 'daily']).default('free'),
-  difficulty: z.enum(['heroine', 'full']).default('heroine'),
+  difficulty: z.enum([...DIFFICULTIES] as [Difficulty, ...Difficulty[]]).default('easy'),
 });
 
 const guessSchema = z.object({
@@ -108,10 +111,11 @@ api.get('/meta', readLimit, (_req, res) => {
   res.json({
     maxGuesses: MAX_GUESSES,
     titles: GAME_TITLES,
-    poolSizes: {
-      heroine: getAnswerPool('heroine').length,
-      full: getAnswerPool('full').length,
-    },
+    difficulties: DIFFICULTIES.map((id) => ({
+      ...DIFFICULTY_META[id],
+      poolSize: getAnswerPool(id).length,
+    })),
+    poolSizes: Object.fromEntries(DIFFICULTIES.map((id) => [id, getAnswerPool(id).length])),
     totalCharacters: CHARACTERS.length,
   });
 });

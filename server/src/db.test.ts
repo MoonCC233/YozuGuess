@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import type { DatabaseSync } from 'node:sqlite';
-import { openDatabase } from './db.js';
+import { DatabaseSync } from 'node:sqlite';
+import { MIGRATION_SQL, migrate, openDatabase } from './db.js';
 
 let db: DatabaseSync;
 
@@ -63,7 +63,7 @@ describe('database migrations', () => {
     const insert = db.prepare(
       `INSERT INTO game_records
         (user_id, mode, difficulty, status, guess_count, answer_id, answer_name, duration_ms, date_key, created_at)
-       VALUES (1, ?, 'heroine', 'won', 3, 1, '绫地宁宁', 1000, ?, ?)`
+       VALUES (1, ?, 'easy', 'won', 3, 1, '绫地宁宁', 1000, ?, ?)`
     );
     insert.run('daily', '2026-08-30', Date.now());
     expect(() => insert.run('daily', '2026-08-30', Date.now())).toThrow();
@@ -71,5 +71,42 @@ describe('database migrations', () => {
     insert.run('free', null, Date.now());
     const count = db.prepare('SELECT count(*) AS n FROM game_records').get() as { n: number };
     expect(count.n).toBe(3);
+  });
+
+  it('rewrites the two legacy difficulty values into the four-tier scheme', () => {
+    // 手工建一个只跑到第 1 版的旧库
+    const legacy = new DatabaseSync(':memory:');
+    legacy.exec('PRAGMA foreign_keys = ON');
+    legacy.exec(MIGRATION_SQL[0]!);
+    legacy.exec('PRAGMA user_version = 1');
+    legacy
+      .prepare('INSERT INTO users (id, username, username_lower, password_hash, created_at) VALUES (1, ?, ?, ?, ?)')
+      .run('柚子', '柚子', 'hash', Date.now());
+    const game = legacy.prepare(
+      `INSERT INTO game_records
+        (user_id, mode, difficulty, status, guess_count, answer_id, answer_name, duration_ms, date_key, created_at)
+       VALUES (1, 'free', ?, 'won', 3, 1, '绫地宁宁', 1000, NULL, ?)`
+    );
+    game.run('heroine', Date.now());
+    game.run('full', Date.now());
+    legacy
+      .prepare(
+        `INSERT INTO match_records
+          (user_id, room_code, bo_type, difficulty, result, own_score, rival_score, opponents, reason, created_at)
+         VALUES (1, 'ABCDE', 3, ?, 'won', 2, 0, '[]', 'guessed', ?)`
+      )
+      .run('heroine', Date.now());
+
+    migrate(legacy);
+
+    const games = legacy.prepare('SELECT difficulty FROM game_records ORDER BY id').all() as Array<{
+      difficulty: string;
+    }>;
+    expect(games.map((r) => r.difficulty)).toEqual(['hard', 'hell']);
+    const match = legacy.prepare('SELECT difficulty FROM match_records').get() as { difficulty: string };
+    expect(match.difficulty).toBe('hard');
+    const version = legacy.prepare('PRAGMA user_version').get() as { user_version: number };
+    expect(version.user_version).toBe(MIGRATION_SQL.length);
+    legacy.close();
   });
 });

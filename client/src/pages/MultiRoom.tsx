@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import type { PublicPlayer, PublicRoom } from '@yozu/shared';
+import { difficultyLabel, type PublicPlayer, type PublicRoom } from '@yozu/shared';
 import { fetchCharacters, type CharacterListItem } from '../api.js';
 import { errorMessage } from '../errors.js';
 import {
@@ -184,7 +184,7 @@ export function MultiRoom() {
             房间 <span className="room-code">{room.code}</span>
           </h1>
           <p className="muted">
-            BO{room.boType} · {room.difficulty === 'heroine' ? '简单版' : '完整版'} · 先拿 {room.winsNeeded} 小局
+            BO{room.boType} · {difficultyLabel(room.difficulty)} · 先拿 {room.winsNeeded} 小局
             {room.round > 0 ? ` · 第 ${room.round} 小局` : ''}
             {isSpectator ? ' · 你是旁观者' : ''}
           </p>

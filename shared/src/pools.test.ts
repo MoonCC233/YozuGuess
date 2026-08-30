@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import {
+  DIFFICULTIES,
+  DIFFICULTY_META,
+  EIGHT_TITLES,
+  FOUR_CLASSICS,
+  difficultyLabel,
   getAnswerPool,
   getGuessableCharacters,
   pickDailyAnswer,
@@ -12,15 +17,35 @@ import {
 import { CHARACTERS } from './characters.js';
 
 describe('answer pools', () => {
-  it('heroine pool only contains heroines and is non-empty', () => {
-    const pool = getAnswerPool('heroine');
+  it('easy pool covers exactly the four classics, all characters', () => {
+    const pool = getAnswerPool('easy');
     expect(pool.length).toBeGreaterThan(0);
-    expect(pool.every((c) => c.isMain)).toBe(true);
-    expect(pool.length).toBeLessThan(CHARACTERS.length);
+    expect(new Set(pool.map((c) => c.title))).toEqual(new Set(FOUR_CLASSICS));
+    expect(pool).toHaveLength(CHARACTERS.filter((c) => FOUR_CLASSICS.includes(c.title)).length);
+    expect(pool.some((c) => !c.isMain)).toBe(true);
   });
 
-  it('full pool contains every character', () => {
-    expect(getAnswerPool('full')).toHaveLength(CHARACTERS.length);
+  it('normal pool covers the eight titles and contains the easy pool', () => {
+    const pool = getAnswerPool('normal');
+    expect(new Set(pool.map((c) => c.title))).toEqual(new Set(EIGHT_TITLES));
+    const easyIds = new Set(getAnswerPool('easy').map((c) => c.id));
+    expect([...easyIds].every((id) => pool.some((c) => c.id === id))).toBe(true);
+  });
+
+  it('hard pool is every heroine across all titles', () => {
+    const pool = getAnswerPool('hard');
+    expect(pool.every((c) => c.isMain)).toBe(true);
+    expect(pool).toHaveLength(CHARACTERS.filter((c) => c.isMain).length);
+  });
+
+  it('hell pool contains every character', () => {
+    expect(getAnswerPool('hell')).toHaveLength(CHARACTERS.length);
+  });
+
+  it('every difficulty has a non-empty pool', () => {
+    for (const d of DIFFICULTIES) {
+      expect(getAnswerPool(d).length).toBeGreaterThan(0);
+    }
   });
 
   it('guessable list always contains every character', () => {
@@ -29,7 +54,8 @@ describe('answer pools', () => {
 
   it('random answer comes from the requested pool', () => {
     for (let i = 0; i < 30; i += 1) {
-      expect(pickRandomAnswer('heroine').isMain).toBe(true);
+      expect(pickRandomAnswer('hard').isMain).toBe(true);
+      expect(FOUR_CLASSICS).toContain(pickRandomAnswer('easy').title);
     }
   });
 
@@ -40,18 +66,25 @@ describe('answer pools', () => {
 
 describe('daily answer', () => {
   it('is stable for the same date and difficulty', () => {
-    const a = pickDailyAnswer('heroine', '2026-08-30');
-    const b = pickDailyAnswer('heroine', '2026-08-30');
+    const a = pickDailyAnswer('easy', '2026-08-30');
+    const b = pickDailyAnswer('easy', '2026-08-30');
     expect(a.id).toBe(b.id);
   });
 
   it('varies across dates', () => {
     const ids = new Set(
       ['2026-08-30', '2026-08-31', '2026-09-01', '2026-09-02', '2026-09-03'].map(
-        (d) => pickDailyAnswer('heroine', d).id
+        (d) => pickDailyAnswer('easy', d).id
       )
     );
     expect(ids.size).toBeGreaterThan(1);
+  });
+
+  it('stays inside the pool for every difficulty', () => {
+    for (const d of DIFFICULTIES) {
+      const ids = new Set(getAnswerPool(d).map((c) => c.id));
+      expect(ids.has(pickDailyAnswer(d, '2026-08-30').id)).toBe(true);
+    }
   });
 
   it('formats date keys as YYYY-MM-DD', () => {
@@ -84,9 +117,24 @@ describe('search', () => {
 
 describe('difficulty guard', () => {
   it('accepts known values only', () => {
-    expect(isDifficulty('heroine')).toBe(true);
-    expect(isDifficulty('full')).toBe(true);
-    expect(isDifficulty('hard')).toBe(false);
+    expect(isDifficulty('easy')).toBe(true);
+    expect(isDifficulty('normal')).toBe(true);
+    expect(isDifficulty('hard')).toBe(true);
+    expect(isDifficulty('hell')).toBe(true);
+    expect(isDifficulty('heroine')).toBe(false);
+    expect(isDifficulty('full')).toBe(false);
     expect(isDifficulty(1)).toBe(false);
+  });
+
+  it('exposes a tier name and label for each difficulty', () => {
+    for (const d of DIFFICULTIES) {
+      expect(DIFFICULTY_META[d].tier).not.toBe('');
+      expect(DIFFICULTY_META[d].label).not.toBe('');
+      expect(difficultyLabel(d)).toBe(DIFFICULTY_META[d].label);
+    }
+  });
+
+  it('passes unknown legacy values through when labelling', () => {
+    expect(difficultyLabel('heroine')).toBe('heroine');
   });
 });

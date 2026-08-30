@@ -198,7 +198,7 @@ describe('account data endpoints', () => {
     recordSoloGame({
       userId,
       mode: 'free',
-      difficulty: 'heroine',
+      difficulty: 'easy',
       status: 'won',
       guessCount: 3,
       answerId: 1,
@@ -210,7 +210,7 @@ describe('account data endpoints', () => {
       userId,
       roomCode: 'ABCD',
       boType: 3,
-      difficulty: 'heroine',
+      difficulty: 'easy',
       result: 'won',
       ownScore: 2,
       rivalScore: 1,
@@ -236,7 +236,7 @@ describe('account data endpoints', () => {
     recordSoloGame({
       userId: other.value.user.id,
       mode: 'free',
-      difficulty: 'heroine',
+      difficulty: 'easy',
       status: 'won',
       guessCount: 2,
       answerId: 2,
@@ -262,7 +262,7 @@ describe('account data endpoints', () => {
       recordSoloGame({
         userId: alice.value.user.id,
         mode: 'free',
-        difficulty: 'heroine',
+        difficulty: 'easy',
         status: 'won',
         guessCount: 2,
         answerId: i + 1,
@@ -274,7 +274,7 @@ describe('account data endpoints', () => {
     recordSoloGame({
       userId: bob.value.user.id,
       mode: 'free',
-      difficulty: 'heroine',
+      difficulty: 'easy',
       status: 'won',
       guessCount: 5,
       answerId: 9,

@@ -1,6 +1,12 @@
 import type { Server, Socket } from 'socket.io';
 import { z } from 'zod';
-import { type GuessFeedback, type PublicRoom, type RoomErrorCode } from '@yozu/shared';
+import {
+  DIFFICULTIES,
+  type Difficulty,
+  type GuessFeedback,
+  type PublicRoom,
+  type RoomErrorCode,
+} from '@yozu/shared';
 import {
   applyGuess,
   createRoom,
@@ -24,7 +30,7 @@ export type Ack<T> = (response: { ok: true; data: T } | { ok: false; error: Room
 
 const createSchema = z.object({
   boType: z.union([z.literal(1), z.literal(3), z.literal(5), z.literal(7)]).default(3),
-  difficulty: z.enum(['heroine', 'full']).default('heroine'),
+  difficulty: z.enum([...DIFFICULTIES] as [Difficulty, ...Difficulty[]]).default('easy'),
 });
 
 const joinSchema = z.object({

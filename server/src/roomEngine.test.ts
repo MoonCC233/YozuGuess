@@ -39,7 +39,7 @@ function setupRoom(boType: 1 | 3 | 5 | 7 = 3): {
   const created = createRoom({
     hostName: '主机',
     boType,
-    difficulty: 'heroine',
+    difficulty: 'easy',
     socketId: 'sock-host',
     pickAnswer: fixedAnswer,
   });
@@ -52,7 +52,7 @@ function setupRoom(boType: 1 | 3 | 5 | 7 = 3): {
 
 describe('room lifecycle', () => {
   it('creates a room with a 5-char code and the host as first player', () => {
-    const created = createRoom({ hostName: '主机', boType: 3, difficulty: 'heroine' });
+    const created = createRoom({ hostName: '主机', boType: 3, difficulty: 'easy' });
     expect(created.ok).toBe(true);
     if (!created.ok) return;
     const { room, player } = created.value;
@@ -79,7 +79,7 @@ describe('room lifecycle', () => {
     const created = createRoom({
       hostName: '房主',
       boType: 3,
-      difficulty: 'heroine',
+      difficulty: 'easy',
       socketId: 'sock-host',
       userId: 7,
     });
@@ -104,7 +104,7 @@ describe('room lifecycle', () => {
   });
 
   it('needs at least two players to start', () => {
-    const created = createRoom({ hostName: '独狼', boType: 3, difficulty: 'heroine' });
+    const created = createRoom({ hostName: '独狼', boType: 3, difficulty: 'easy' });
     if (!created.ok) return;
     expect(startRound(created.value.room)).toEqual({ ok: false, error: 'NEED_MORE_PLAYERS' });
   });

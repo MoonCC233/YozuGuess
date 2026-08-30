@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { DIFFICULTIES, DIFFICULTY_META } from '@yozu/shared';
 import type { Difficulty, GameMode } from '../api.js';
 import { useMeta } from '../MetaContext.js';
 import { loadSession } from '../storage.js';
@@ -8,7 +9,7 @@ export function Home() {
   const navigate = useNavigate();
   const { meta, error } = useMeta();
   const [mode, setMode] = useState<GameMode>('free');
-  const [difficulty, setDifficulty] = useState<Difficulty>('heroine');
+  const [difficulty, setDifficulty] = useState<Difficulty>('easy');
   const [hasSaved, setHasSaved] = useState(false);
 
   useEffect(() => {
@@ -53,27 +54,29 @@ export function Home() {
 
       <div className="card">
         <h2>难度</h2>
-        <div className="choice-group" role="radiogroup" aria-label="难度">
-          <button
-            type="button"
-            role="radio"
-            aria-checked={difficulty === 'heroine'}
-            className={`choice ${difficulty === 'heroine' ? 'selected' : ''}`}
-            onClick={() => setDifficulty('heroine')}
-          >
-            <strong>简单版</strong>
-            <span>只从可攻略女主角中抽取{meta ? `（${meta.poolSizes.heroine} 位）` : ''}</span>
-          </button>
-          <button
-            type="button"
-            role="radio"
-            aria-checked={difficulty === 'full'}
-            className={`choice ${difficulty === 'full' ? 'selected' : ''}`}
-            onClick={() => setDifficulty('full')}
-          >
-            <strong>完整版</strong>
-            <span>全部角色，含男主角与配角{meta ? `（${meta.poolSizes.full} 位）` : ''}</span>
-          </button>
+        <div className="choice-group choice-quad" role="radiogroup" aria-label="难度">
+          {DIFFICULTIES.map((id) => {
+            const info = meta?.difficulties.find((d) => d.id === id) ?? DIFFICULTY_META[id];
+            const size = meta?.poolSizes[id];
+            return (
+              <button
+                key={id}
+                type="button"
+                role="radio"
+                aria-checked={difficulty === id}
+                aria-label={`${info.tier} ${info.label}`}
+                className={`choice ${difficulty === id ? 'selected' : ''}`}
+                onClick={() => setDifficulty(id)}
+              >
+                <small className="choice-tier">{info.tier}</small>
+                <strong className="choice-label">{info.label}</strong>
+                <span>
+                  {info.desc}
+                  {size ? `（${size} 位）` : ''}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 

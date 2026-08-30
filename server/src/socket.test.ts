@@ -114,7 +114,7 @@ async function makeMatch(boType: 1 | 3 | 5 | 7 = 3) {
   const guestSocket = await signedClient('客人');
   const created = await emit<JoinData>(hostSocket, 'room:create', {
     boType,
-    difficulty: 'heroine',
+    difficulty: 'easy',
   });
   if (!created.ok) throw new Error(created.error);
   const joined = await emit<JoinData>(guestSocket, 'room:join', {
