@@ -36,7 +36,7 @@ export const DIFFICULTY_META: Record<Difficulty, DifficultyMeta> = {
   easy: {
     id: 'easy',
     tier: '简单模式',
-    label: 'Zako♥~',
+    label: '? !弱弱! ?',
     desc: '四大名著全角色',
     titles: FOUR_CLASSICS,
     heroineOnly: false,
