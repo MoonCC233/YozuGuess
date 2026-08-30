@@ -3,11 +3,13 @@ import request from 'supertest';
 import { CHARACTERS, MAX_GUESSES, pickDailyAnswer, toDateKey } from '@yozu/shared';
 import { createApp } from './app.js';
 import { resetSessions } from './gameStore.js';
+import { resetRateLimits } from './rateLimit.js';
 
 const app = createApp();
 
 beforeEach(() => {
   resetSessions();
+  resetRateLimits();
 });
 
 async function startGame(body: Record<string, unknown> = {}) {

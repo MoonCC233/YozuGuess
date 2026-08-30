@@ -10,6 +10,19 @@ import {
   type Character,
 } from '@yozu/shared';
 import { getGame, revealAnswer, startGame, submitGuess } from './gameStore.js';
+import { rateLimit } from './rateLimit.js';
+import { config } from './config.js';
+
+const readLimit = rateLimit({
+  name: 'read',
+  limit: config.readRateLimit,
+  windowMs: config.rateLimitWindowMs,
+});
+const writeLimit = rateLimit({
+  name: 'write',
+  limit: config.writeRateLimit,
+  windowMs: config.rateLimitWindowMs,
+});
 
 const startSchema = z.object({
   mode: z.enum(['free', 'daily']).default('free'),
@@ -36,7 +49,7 @@ api.get('/health', (_req, res) => {
   res.json({ ok: true });
 });
 
-api.get('/meta', (_req, res) => {
+api.get('/meta', readLimit, (_req, res) => {
   res.json({
     maxGuesses: MAX_GUESSES,
     titles: GAME_TITLES,
@@ -48,24 +61,24 @@ api.get('/meta', (_req, res) => {
   });
 });
 
-api.get('/characters', (_req, res) => {
+api.get('/characters', readLimit, (_req, res) => {
   res.json({ characters: CHARACTERS.map(toListItem) });
 });
 
-api.get('/characters/search', (req, res) => {
+api.get('/characters/search', readLimit, (req, res) => {
   const q = typeof req.query.q === 'string' ? req.query.q : '';
   res.json({ characters: searchCharacters(q).map(toListItem) });
 });
 
 /** 图鉴：完整角色资料，供玩家查阅（不涉及进行中的对局） */
-api.get('/codex', (_req, res) => {
+api.get('/codex', readLimit, (_req, res) => {
   res.json({
     characters: CHARACTERS.map((c) => ({ ...c, cvAliases: getCvAliases(c.cv) })),
     titles: GAME_TITLES,
   });
 });
 
-api.post('/game/start', (req, res) => {
+api.post('/game/start', writeLimit, (req, res) => {
   const parsed = startSchema.safeParse(req.body ?? {});
   if (!parsed.success) {
     res.status(400).json({ code: 'INVALID_PAYLOAD' });
@@ -75,7 +88,7 @@ api.post('/game/start', (req, res) => {
   res.status(201).json({ state });
 });
 
-api.get('/game/:sessionId', (req, res) => {
+api.get('/game/:sessionId', readLimit, (req, res) => {
   const state = getGame(req.params.sessionId);
   if (!state) {
     res.status(404).json({ code: 'SESSION_NOT_FOUND' });
@@ -84,7 +97,7 @@ api.get('/game/:sessionId', (req, res) => {
   res.json({ state });
 });
 
-api.post('/game/guess', (req, res) => {
+api.post('/game/guess', writeLimit, (req, res) => {
   const parsed = guessSchema.safeParse(req.body ?? {});
   if (!parsed.success) {
     res.status(400).json({ code: 'INVALID_PAYLOAD' });
@@ -98,7 +111,7 @@ api.post('/game/guess', (req, res) => {
   res.json({ state: result.state, feedback: result.feedback });
 });
 
-api.post('/game/reveal', (req, res) => {
+api.post('/game/reveal', writeLimit, (req, res) => {
   const parsed = sessionSchema.safeParse(req.body ?? {});
   if (!parsed.success) {
     res.status(400).json({ code: 'INVALID_PAYLOAD' });

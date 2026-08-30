@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import express, { type ErrorRequestHandler } from 'express';
 import { config } from './config.js';
 import { api } from './routes.js';
+import { securityHeaders } from './security.js';
 
 const handleError: ErrorRequestHandler = (err, _req, res, _next) => {
   console.error('[yozu] unhandled error', err);
@@ -12,6 +13,8 @@ const handleError: ErrorRequestHandler = (err, _req, res, _next) => {
 
 export function createApp(): express.Express {
   const app = express();
+  app.set('trust proxy', true);
+  app.use(securityHeaders);
   app.use(express.json({ limit: '32kb' }));
   app.use('/api', api);
 
