@@ -89,7 +89,8 @@ api.post('/game/start', writeLimit, (req, res) => {
 });
 
 api.get('/game/:sessionId', readLimit, (req, res) => {
-  const state = getGame(req.params.sessionId);
+  const sessionId = String(req.params.sessionId ?? '');
+  const state = getGame(sessionId);
   if (!state) {
     res.status(404).json({ code: 'SESSION_NOT_FOUND' });
     return;
