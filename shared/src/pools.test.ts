@@ -25,17 +25,18 @@ describe('answer pools', () => {
     expect(pool.some((c) => !c.isMain)).toBe(true);
   });
 
-  it('normal pool covers the eight titles and contains the easy pool', () => {
+  it('normal pool is every heroine across all titles', () => {
     const pool = getAnswerPool('normal');
+    expect(pool.every((c) => c.isMain)).toBe(true);
+    expect(pool).toHaveLength(CHARACTERS.filter((c) => c.isMain).length);
+  });
+
+  it('hard pool covers the eight titles and contains the easy pool', () => {
+    const pool = getAnswerPool('hard');
     expect(new Set(pool.map((c) => c.title))).toEqual(new Set(EIGHT_TITLES));
     const easyIds = new Set(getAnswerPool('easy').map((c) => c.id));
     expect([...easyIds].every((id) => pool.some((c) => c.id === id))).toBe(true);
-  });
-
-  it('hard pool is every heroine across all titles', () => {
-    const pool = getAnswerPool('hard');
-    expect(pool.every((c) => c.isMain)).toBe(true);
-    expect(pool).toHaveLength(CHARACTERS.filter((c) => c.isMain).length);
+    expect(pool.some((c) => !c.isMain)).toBe(true);
   });
 
   it('hell pool contains every character', () => {
@@ -54,8 +55,9 @@ describe('answer pools', () => {
 
   it('random answer comes from the requested pool', () => {
     for (let i = 0; i < 30; i += 1) {
-      expect(pickRandomAnswer('hard').isMain).toBe(true);
+      expect(pickRandomAnswer('normal').isMain).toBe(true);
       expect(FOUR_CLASSICS).toContain(pickRandomAnswer('easy').title);
+      expect(EIGHT_TITLES).toContain(pickRandomAnswer('hard').title);
     }
   });
 

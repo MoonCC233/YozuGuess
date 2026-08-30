@@ -71,6 +71,16 @@ const MIGRATIONS: string[] = [
   UPDATE match_records SET difficulty = 'hard' WHERE difficulty = 'heroine';
   UPDATE match_records SET difficulty = 'hell' WHERE difficulty = 'full';
   `,
+  // 3: 普通模式与困难模式整体互换（normal 现在是全作品可攻略、hard 是八部作品全角色）。
+  //    历史记录按语义跟着换，才能继续对应当初玩的那个答案池；借临时值避免两次 UPDATE 撞车。
+  `
+  UPDATE game_records SET difficulty = 'swap_tmp' WHERE difficulty = 'normal';
+  UPDATE game_records SET difficulty = 'normal' WHERE difficulty = 'hard';
+  UPDATE game_records SET difficulty = 'hard' WHERE difficulty = 'swap_tmp';
+  UPDATE match_records SET difficulty = 'swap_tmp' WHERE difficulty = 'normal';
+  UPDATE match_records SET difficulty = 'normal' WHERE difficulty = 'hard';
+  UPDATE match_records SET difficulty = 'hard' WHERE difficulty = 'swap_tmp';
+  `,
 ];
 
 function resolveDbPath(file: string): string {

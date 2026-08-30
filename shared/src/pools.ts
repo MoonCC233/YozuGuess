@@ -9,7 +9,7 @@ export type Difficulty = (typeof DIFFICULTIES)[number];
 /** 「四大名著」：夜宴、万花、RIDDLE、Stella */
 export const FOUR_CLASSICS: GameTitle[] = ['sannabitch', 'sengoku', 'riddle', 'stella'];
 
-/** 普通模式的八部作品：四大名著 + 天使、Lime、天色、DRACU */
+/** 困难模式的八部作品：四大名著 + 天使、Lime、天色、DRACU */
 export const EIGHT_TITLES: GameTitle[] = [
   ...FOUR_CLASSICS,
   'rebo',
@@ -44,18 +44,18 @@ export const DIFFICULTY_META: Record<Difficulty, DifficultyMeta> = {
   normal: {
     id: 'normal',
     tier: '普通模式',
-    label: '雑魚♥~',
-    desc: '八部作品全角色',
-    titles: EIGHT_TITLES,
-    heroineOnly: false,
-  },
-  hard: {
-    id: 'hard',
-    tier: '困难模式',
     label: '⚡电 电⚡',
     desc: '全作品可攻略角色',
     titles: null,
     heroineOnly: true,
+  },
+  hard: {
+    id: 'hard',
+    tier: '困难模式',
+    label: '雑魚♥~',
+    desc: '八部作品全角色',
+    titles: EIGHT_TITLES,
+    heroineOnly: false,
   },
   hell: {
     id: 'hell',

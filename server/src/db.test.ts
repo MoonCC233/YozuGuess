@@ -73,7 +73,7 @@ describe('database migrations', () => {
     expect(count.n).toBe(3);
   });
 
-  it('rewrites the two legacy difficulty values into the four-tier scheme', () => {
+  it('maps the two legacy difficulty values onto the tier that keeps their meaning', () => {
     // 手工建一个只跑到第 1 版的旧库
     const legacy = new DatabaseSync(':memory:');
     legacy.exec('PRAGMA foreign_keys = ON');
@@ -102,11 +102,52 @@ describe('database migrations', () => {
     const games = legacy.prepare('SELECT difficulty FROM game_records ORDER BY id').all() as Array<{
       difficulty: string;
     }>;
-    expect(games.map((r) => r.difficulty)).toEqual(['hard', 'hell']);
+    // 旧 heroine 是「全作品可攻略」，互换后归到 normal；旧 full 是「全作品全角色」，仍是 hell
+    expect(games.map((r) => r.difficulty)).toEqual(['normal', 'hell']);
     const match = legacy.prepare('SELECT difficulty FROM match_records').get() as { difficulty: string };
-    expect(match.difficulty).toBe('hard');
+    expect(match.difficulty).toBe('normal');
     const version = legacy.prepare('PRAGMA user_version').get() as { user_version: number };
     expect(version.user_version).toBe(MIGRATION_SQL.length);
     legacy.close();
+  });
+
+  it('swaps normal and hard records without collapsing them together', () => {
+    // 建一个已经跑到第 2 版（四档但未互换）的库
+    const old = new DatabaseSync(':memory:');
+    old.exec('PRAGMA foreign_keys = ON');
+    old.exec(MIGRATION_SQL[0]!);
+    old.exec(MIGRATION_SQL[1]!);
+    old.exec('PRAGMA user_version = 2');
+    old
+      .prepare('INSERT INTO users (id, username, username_lower, password_hash, created_at) VALUES (1, ?, ?, ?, ?)')
+      .run('柚子', '柚子', 'hash', Date.now());
+    const game = old.prepare(
+      `INSERT INTO game_records
+        (user_id, mode, difficulty, status, guess_count, answer_id, answer_name, duration_ms, date_key, created_at)
+       VALUES (1, 'free', ?, 'won', 3, 1, '绫地宁宁', 1000, NULL, ?)`
+    );
+    for (const d of ['easy', 'normal', 'hard', 'hell']) game.run(d, Date.now());
+    const match = old.prepare(
+      `INSERT INTO match_records
+        (user_id, room_code, bo_type, difficulty, result, own_score, rival_score, opponents, reason, created_at)
+       VALUES (1, 'ABCDE', 3, ?, 'won', 2, 0, '[]', 'guessed', ?)`
+    );
+    match.run('normal', Date.now());
+    match.run('hard', Date.now());
+
+    migrate(old);
+
+    const games = old.prepare('SELECT difficulty FROM game_records ORDER BY id').all() as Array<{
+      difficulty: string;
+    }>;
+    expect(games.map((r) => r.difficulty)).toEqual(['easy', 'hard', 'normal', 'hell']);
+    const matches = old.prepare('SELECT difficulty FROM match_records ORDER BY id').all() as Array<{
+      difficulty: string;
+    }>;
+    expect(matches.map((r) => r.difficulty)).toEqual(['hard', 'normal']);
+    expect(
+      (old.prepare("SELECT count(*) AS n FROM game_records WHERE difficulty = 'swap_tmp'").get() as { n: number }).n
+    ).toBe(0);
+    old.close();
   });
 });

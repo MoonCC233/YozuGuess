@@ -55,9 +55,14 @@ describe('meta endpoints', () => {
     expect(easy.tier).toBe(DIFFICULTY_META.easy.tier);
     expect(easy.titles).toEqual(DIFFICULTY_META.easy.titles);
     expect(easy.poolSize).toBe(getAnswerPool('easy').length);
+    const normal = res.body.difficulties[1];
+    expect(normal.tier).toBe('普通模式');
+    expect(normal.titles).toBeNull();
+    expect(normal.heroineOnly).toBe(true);
     const hard = res.body.difficulties[2];
-    expect(hard.titles).toBeNull();
-    expect(hard.heroineOnly).toBe(true);
+    expect(hard.tier).toBe('困难模式');
+    expect(hard.titles).toEqual(DIFFICULTY_META.hard.titles);
+    expect(hard.heroineOnly).toBe(false);
   });
 
   it('character list hides answer attributes', async () => {
