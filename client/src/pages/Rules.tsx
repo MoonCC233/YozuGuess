@@ -91,6 +91,28 @@ export function Rules() {
         </p>
       </div>
 
+      <div className="card">
+        <h2>账号与战绩</h2>
+        <p>
+          账号是可选的，不登录也能玩全部模式，只是不留记录。
+          <strong>登录后单人对局与联机对战会自动记录</strong>，在个人主页能看到胜率、平均猜测次数、连胜和猜中次数分布。
+        </p>
+        <dl className="dims">
+          <dt>匿名局</dt>
+          <dd>未登录时开的局不写入任何战绩</dd>
+          <dt>每日一柚</dt>
+          <dd>每天只记第一次的结果，重开不会刷数据</dd>
+          <dt>自由练习</dt>
+          <dd>每局都记，放弃看答案也算一局但不计胜</dd>
+          <dt>联机对战</dt>
+          <dd>整场结束时记一条；房主重置比分后的重赛单独算一场</dd>
+          <dt>中途退出</dt>
+          <dd>逃跑者记败绩，留下的人记胜绩</dd>
+          <dt>排行榜</dt>
+          <dd>按单人猜中局数排序，同分时平均猜测次数少的靠前</dd>
+        </dl>
+      </div>
+
       <div className="actions">
         <Link className="btn btn-primary" to="/">
           去玩一局

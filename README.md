@@ -11,7 +11,7 @@
 ![Socket.IO](https://img.shields.io/badge/Socket.IO-010101?logo=socketdotio&logoColor=white)
 ![pnpm workspaces](https://img.shields.io/badge/pnpm-workspaces-F69220?logo=pnpm&logoColor=white)
 
-[玩法](#玩法) · [联机对战](#联机对战) · [快速开始](#快速开始) · [接口](#接口) · [数据](#数据) · [项目结构](#项目结构)
+[玩法](#玩法) · [联机对战](#联机对战) · [账号与战绩](#账号与战绩) · [快速开始](#快速开始) · [接口](#接口) · [数据](#数据) · [项目结构](#项目结构)
 
 </div>
 
@@ -93,9 +93,44 @@
 
 错误码：`INVALID_PAYLOAD`、`ROOM_NOT_FOUND`、`ROOM_FULL`、`ROOM_IN_PROGRESS`、`NAME_TAKEN`、`PLAYER_NOT_FOUND`、`NOT_HOST`、`NEED_MORE_PLAYERS`、`NOT_PLAYING`、`SPECTATOR_CANNOT_GUESS`、`ALREADY_DONE`、`GUESS_LIMIT_REACHED`、`DUPLICATE_GUESS`、`CHARACTER_NOT_FOUND`、`RATE_LIMITED`、`TOO_MANY_ROOMS`。
 
+## 账号与战绩
+
+账号是**完全可选**的：不登录也能玩全部模式，只是不留记录。登录后单人对局与联机对战会自动落库，可在个人主页查看统计与历史。
+
+### 认证方式
+
+- 密码用 Node 内置 `scrypt` 加盐哈希存储（每个用户独立随机盐），校验走定时安全比较
+- 会话令牌存在 `httpOnly` + `sameSite=lax` 的 `yozu_session` cookie 中，前端读不到，登录态通过 `GET /api/auth/me` 探测
+- 修改密码会吊销该账号的**其他**所有会话，当前设备保持登录
+- 用户名 2-16 位（中英文、数字、下划线、连字符），大小写不敏感去重；密码至少 8 位
+- 认证类接口按 IP 独立限流（默认 20 次 / 窗口），防暴力撞库
+
+### 统计口径
+
+| 规则 | 说明 |
+| --- | --- |
+| 匿名局不记录 | 未登录时开的局不会写入任何战绩 |
+| 每日一柚每天只计第一次 | 靠数据库唯一索引保证，同一天重开不会刷数据 |
+| 自由练习每局都记 | 想刷多少局都行 |
+| 放弃看答案算一局 | 状态记为 `revealed`，计入场次但不计胜 |
+| 联机重赛单独计一场 | 房主重置比分后是新的一场 |
+| 弃权双方都留记录 | 逃跑者记败绩，留下的人记胜绩 |
+| 排行榜口径 | 按单人猜中局数排序，同分时平均猜测次数少的靠前 |
+
+### 数据表
+
+SQLite 文件默认落在 `server/data/yozu.db`（`DB_PATH` 可改），首次启动自动建表。
+
+| 表 | 用途 |
+| --- | --- |
+| `users` | 用户名、密码哈希、注册与最后登录时间 |
+| `auth_sessions` | 会话令牌，带过期时间与最后活跃时间，每小时清扫过期项 |
+| `game_records` | 单人对局：模式、难度、结果、猜测次数、答案、用时、日期键 |
+| `match_records` | 联机对战：房间号、赛制、结果、比分、对手列表、结束原因 |
+
 ## 快速开始
 
-**环境要求**：Node.js ≥ 20、pnpm。无需数据库，进行中的单人对局与联机房间都保存在服务端内存中（单人默认 30 分钟无操作过期，房间默认 1 小时）。
+**环境要求**：Node.js ≥ 20（需内置 `node:sqlite`，建议 22+）、pnpm。进行中的单人对局与联机房间保存在服务端内存中（单人默认 30 分钟无操作过期，房间默认 1 小时）；账号与战绩持久化在 SQLite 文件里。
 
 ```bash
 pnpm install
@@ -136,6 +171,10 @@ pnpm start      # http://localhost:3000
 | `INTERMISSION_MS` | `8000` | 小局之间的结算间歇 |
 | `ROOM_TTL_MS` | `3600000` | 房间无活动后回收的时间 |
 | `MAX_ROOMS` | `500` | 同时保留的最大房间数 |
+| `DB_PATH` | `data/yozu.db` | SQLite 数据库文件路径（相对 `server/`） |
+| `AUTH_SESSION_TTL_MS` | `2592000000` | 登录会话有效期，默认 30 天 |
+| `AUTH_COOKIE_SECURE` | `false` | 设为 `true` 时会话 cookie 只走 HTTPS，生产环境建议开启 |
+| `AUTH_RATE_LIMIT` | `20` | 注册 / 登录 / 改密每窗口请求上限 |
 
 限流按 IP 分桶。Socket 事件另有独立配额：建房 10 次 / 窗口，加入与重连 30 次 / 窗口，猜测 120 次 / 窗口。
 
@@ -154,8 +193,16 @@ pnpm start      # http://localhost:3000
 | `GET /api/game/:sessionId` | 读取进行中的对局（未结束时不返回答案） |
 | `POST /api/game/guess` | 提交猜测，body: `{ sessionId, characterId }` |
 | `POST /api/game/reveal` | 放弃并公布答案，body: `{ sessionId }` |
+| `POST /api/auth/register` | 注册并登录，body: `{ username, password }` |
+| `POST /api/auth/login` | 登录，body: `{ username, password }` |
+| `POST /api/auth/logout` | 登出，吊销当前会话 |
+| `GET /api/auth/me` | 当前登录用户，未登录返回 `{ user: null }` |
+| `POST /api/auth/password` | 改密，body: `{ currentPassword, newPassword }`，会吊销其他会话 |
+| `GET /api/me/stats` | 单人 / 每日 / 联机三组统计（需登录） |
+| `GET /api/me/history?limit=` | 最近单人对局与联机对战（需登录，上限 100） |
+| `GET /api/leaderboard?limit=` | 排行榜，无需登录 |
 
-错误码：`SESSION_NOT_FOUND`、`GAME_FINISHED`、`CHARACTER_NOT_FOUND`、`DUPLICATE_GUESS`、`INVALID_PAYLOAD`、`NOT_FOUND`、`INTERNAL_ERROR`、`RATE_LIMITED`。
+错误码：`SESSION_NOT_FOUND`、`GAME_FINISHED`、`CHARACTER_NOT_FOUND`、`DUPLICATE_GUESS`、`INVALID_PAYLOAD`、`NOT_FOUND`、`INTERNAL_ERROR`、`RATE_LIMITED`、`UNAUTHORIZED`、`INVALID_CREDENTIALS`、`USERNAME_TAKEN`、`USERNAME_INVALID`、`PASSWORD_WEAK`。
 
 联机对战不走 REST，全部通过 Socket.IO 事件完成，见[联机对战](#联机对战)。
 
@@ -179,6 +226,9 @@ shared/src
 └── pools.ts         # 难度答案池、每日谜题、名字搜索
 server/src
 ├── config.ts        # 环境配置
+├── db.ts            # SQLite 连接与建表（node:sqlite）
+├── accounts.ts      # 账号核心：scrypt 认证、会话、战绩统计
+├── auth.ts          # 会话 cookie 与登录态中间件
 ├── gameStore.ts     # 单人对局内存存储（TTL + 容量淘汰）
 ├── rateLimit.ts     # 滑动窗口限流
 ├── routes.ts        # REST 接口 + zod 校验
@@ -190,8 +240,9 @@ client/src
 ├── socket.ts        # socket.io-client 封装（ack Promise 化）
 ├── storage.ts       # localStorage 持久化（昵称 / 房间 / 对局）
 ├── MetaContext.tsx  # 全局元数据
+├── AuthContext.tsx  # 登录态与账号操作
 ├── components/      # GuessBoard / GuessInputBar / Toast
-└── pages/           # Home / Game / MultiLobby / MultiRoom / Codex / Rules
+└── pages/           # Home / Game / MultiLobby / MultiRoom / Codex / Rules / Login / Profile / Leaderboard
 ```
 
 ## 致谢
