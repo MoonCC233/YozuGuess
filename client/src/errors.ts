@@ -22,6 +22,11 @@ const MESSAGES: Record<string, string> = {
   RATE_LIMITED: '操作太频繁，请稍后再试',
   TOO_MANY_ROOMS: '服务器房间已满，请稍后再试',
   SOCKET_TIMEOUT: '服务器没有响应，请检查网络',
+  INVALID_CREDENTIALS: '用户名或密码不正确',
+  USERNAME_TAKEN: '这个用户名已经被注册了',
+  USERNAME_INVALID: '用户名需 2-16 位，只能用中英文、数字、下划线或连字符',
+  PASSWORD_WEAK: '密码至少 8 位',
+  UNAUTHORIZED: '请先登录',
 };
 
 export function errorMessage(code: string): string {
