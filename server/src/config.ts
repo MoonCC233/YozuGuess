@@ -27,4 +27,6 @@ export const config = {
   authSessionTtlMs: Number(process.env.AUTH_SESSION_TTL_MS ?? 30 * 24 * 60 * 60 * 1000),
   /** 会话 cookie 是否只走 HTTPS，生产环境建议开启 */
   authCookieSecure: process.env.AUTH_COOKIE_SECURE === 'true',
+  /** 限流：账号接口（注册/登录/改密）每窗口上限 */
+  authRateLimit: Number(process.env.AUTH_RATE_LIMIT ?? 20),
 } as const;

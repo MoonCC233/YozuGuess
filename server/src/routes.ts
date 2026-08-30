@@ -12,6 +12,18 @@ import {
 import { getGame, revealAnswer, startGame, submitGuess } from './gameStore.js';
 import { rateLimit } from './rateLimit.js';
 import { config } from './config.js';
+import {
+  changePassword,
+  getHistory,
+  getLeaderboard,
+  getStats,
+  login,
+  logout,
+  register,
+  type AccountErrorCode,
+  type User,
+} from './accounts.js';
+import { attachUser, clearSessionCookie, requireUser, setSessionCookie } from './auth.js';
 
 const readLimit = rateLimit({
   name: 'read',
@@ -38,12 +50,50 @@ const sessionSchema = z.object({
   sessionId: z.string().min(1),
 });
 
+const credentialsSchema = z.object({
+  username: z.string().min(1).max(32),
+  password: z.string().min(1).max(128),
+});
+
+const passwordChangeSchema = z.object({
+  currentPassword: z.string().min(1).max(128),
+  newPassword: z.string().min(1).max(128),
+});
+
+/** 账号接口配额单独收紧，避免被拿来撞库 */
+const authLimit = rateLimit({
+  name: 'auth',
+  limit: config.authRateLimit,
+  windowMs: config.rateLimitWindowMs,
+});
+
+/** 账号错误码到 HTTP 状态码的映射 */
+const ACCOUNT_STATUS: Record<AccountErrorCode, number> = {
+  INVALID_CREDENTIALS: 401,
+  USERNAME_TAKEN: 409,
+  USERNAME_INVALID: 400,
+  PASSWORD_WEAK: 400,
+  UNAUTHORIZED: 401,
+};
+
+function publicUser(user: User): { id: number; username: string; createdAt: number; lastLoginAt: number | null } {
+  return {
+    id: user.id,
+    username: user.username,
+    createdAt: user.createdAt,
+    lastLoginAt: user.lastLoginAt,
+  };
+}
+
 /** 猜测列表用的精简角色（不含发色/瞳色等答案属性，避免直接查表作弊） */
 function toListItem(c: Character): { id: number; name: string; nameJp: string } {
   return { id: c.id, name: c.name, nameJp: c.nameJp };
 }
 
 export const api: ExpressRouter = Router();
+
+// 所有接口都先解析会话，登录态是可选的：未登录也能正常玩，只是不记战绩
+api.use(attachUser);
 
 api.get('/health', (_req, res) => {
   res.json({ ok: true });
@@ -124,4 +174,82 @@ api.post('/game/reveal', writeLimit, (req, res) => {
     return;
   }
   res.json({ state: result.state });
+});
+
+/* --------------------------------- 账号 --------------------------------- */
+
+api.post('/auth/register', authLimit, (req, res) => {
+  const parsed = credentialsSchema.safeParse(req.body ?? {});
+  if (!parsed.success) {
+    res.status(400).json({ code: 'INVALID_PAYLOAD' });
+    return;
+  }
+  const created = register(parsed.data.username, parsed.data.password);
+  if (!created.ok) {
+    res.status(ACCOUNT_STATUS[created.error]).json({ code: created.error });
+    return;
+  }
+  setSessionCookie(res, created.value.token, created.value.expiresAt);
+  res.status(201).json({ user: publicUser(created.value.user) });
+});
+
+api.post('/auth/login', authLimit, (req, res) => {
+  const parsed = credentialsSchema.safeParse(req.body ?? {});
+  if (!parsed.success) {
+    res.status(400).json({ code: 'INVALID_PAYLOAD' });
+    return;
+  }
+  const session = login(parsed.data.username, parsed.data.password);
+  if (!session.ok) {
+    res.status(ACCOUNT_STATUS[session.error]).json({ code: session.error });
+    return;
+  }
+  setSessionCookie(res, session.value.token, session.value.expiresAt);
+  res.json({ user: publicUser(session.value.user) });
+});
+
+api.post('/auth/logout', (req, res) => {
+  logout(req.sessionToken);
+  clearSessionCookie(res);
+  res.json({ ok: true });
+});
+
+api.get('/auth/me', readLimit, (req, res) => {
+  res.json({ user: req.user ? publicUser(req.user) : null });
+});
+
+api.post('/auth/password', authLimit, requireUser, (req, res) => {
+  const parsed = passwordChangeSchema.safeParse(req.body ?? {});
+  if (!parsed.success) {
+    res.status(400).json({ code: 'INVALID_PAYLOAD' });
+    return;
+  }
+  const user = req.user!;
+  const changed = changePassword(
+    user.id,
+    parsed.data.currentPassword,
+    parsed.data.newPassword,
+    req.sessionToken
+  );
+  if (!changed.ok) {
+    res.status(ACCOUNT_STATUS[changed.error]).json({ code: changed.error });
+    return;
+  }
+  res.json({ ok: true });
+});
+
+api.get('/me/stats', readLimit, requireUser, (req, res) => {
+  res.json({ stats: getStats(req.user!.id, MAX_GUESSES) });
+});
+
+api.get('/me/history', readLimit, requireUser, (req, res) => {
+  const raw = Number(req.query.limit ?? 20);
+  const limit = Number.isFinite(raw) ? raw : 20;
+  res.json(getHistory(req.user!.id, limit));
+});
+
+api.get('/leaderboard', readLimit, (req, res) => {
+  const raw = Number(req.query.limit ?? 10);
+  const limit = Number.isFinite(raw) ? raw : 10;
+  res.json({ entries: getLeaderboard(limit) });
 });
