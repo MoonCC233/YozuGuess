@@ -17,6 +17,8 @@ import {
 } from './roomEngine.js';
 import { consume } from './rateLimit.js';
 import { config } from './config.js';
+import { authenticate } from './accounts.js';
+import { readSessionToken } from './auth.js';
 
 export type Ack<T> = (response: { ok: true; data: T } | { ok: false; error: RoomErrorCode }) => void;
 
@@ -65,6 +67,15 @@ function limited(socket: Socket, name: string, limit: number): boolean {
   return !consume(`socket:${name}`, identity, limit, config.rateLimitWindowMs).allowed;
 }
 
+/**
+ * 从握手 cookie 里认出登录用户。
+ * 每次建房/加入时重新解析，长连接期间登出不影响已在进行的这一场。
+ */
+function socketUserId(socket: Socket): number | null {
+  const token = readSessionToken(socket.handshake.headers.cookie);
+  return authenticate(token)?.id ?? null;
+}
+
 export function registerSocket(io: Server): () => void {
   const timer = setInterval(() => {
     for (const room of tickRooms()) broadcastRoom(io, room);
@@ -83,6 +94,7 @@ export function registerSocket(io: Server): () => void {
         boType: parsed.data.boType,
         difficulty: parsed.data.difficulty,
         socketId: socket.id,
+        userId: socketUserId(socket),
       });
       if (!created.ok) return reply(ack, { ok: false, error: created.error });
       const { room, player } = created.value;
@@ -99,6 +111,7 @@ export function registerSocket(io: Server): () => void {
         name: parsed.data.name,
         socketId: socket.id,
         spectator: parsed.data.spectator,
+        userId: socketUserId(socket),
       });
       if (!joined.ok) return reply(ack, { ok: false, error: joined.error });
       const { room, player } = joined.value;

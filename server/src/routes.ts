@@ -134,7 +134,7 @@ api.post('/game/start', writeLimit, (req, res) => {
     res.status(400).json({ code: 'INVALID_PAYLOAD' });
     return;
   }
-  const state = startGame(parsed.data.mode, parsed.data.difficulty);
+  const state = startGame(parsed.data.mode, parsed.data.difficulty, req.user?.id ?? null);
   res.status(201).json({ state });
 });
 

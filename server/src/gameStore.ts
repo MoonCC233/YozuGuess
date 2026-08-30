@@ -11,6 +11,7 @@ import {
   type GuessFeedback,
 } from '@yozu/shared';
 import { config } from './config.js';
+import { recordSoloGame } from './accounts.js';
 
 export type GameMode = 'free' | 'daily';
 export type GameStatus = 'playing' | 'won' | 'lost' | 'revealed';
@@ -25,6 +26,10 @@ interface GameSession {
   status: GameStatus;
   startedAt: number;
   updatedAt: number;
+  /** 开局时的登录用户，未登录为 null；结束时用来落库 */
+  userId: number | null;
+  /** 防止同一局被重复写进战绩 */
+  recorded: boolean;
 }
 
 /** 对客户端可见的对局状态；答案仅在结束后下发 */
@@ -61,7 +66,7 @@ function sweep(now = Date.now()): void {
   }
 }
 
-function isFinished(status: GameStatus): boolean {
+function isFinished(status: GameStatus): status is Exclude<GameStatus, 'playing'> {
   return status !== 'playing';
 }
 
@@ -80,7 +85,11 @@ function toView(session: GameSession): GameStateView {
   };
 }
 
-export function startGame(mode: GameMode, difficulty: Difficulty): GameStateView {
+export function startGame(
+  mode: GameMode,
+  difficulty: Difficulty,
+  userId: number | null = null
+): GameStateView {
   sweep();
   const now = Date.now();
   const dateKey = mode === 'daily' ? toDateKey(new Date()) : null;
@@ -98,9 +107,32 @@ export function startGame(mode: GameMode, difficulty: Difficulty): GameStateView
     status: 'playing',
     startedAt: now,
     updatedAt: now,
+    userId,
+    recorded: false,
   };
   sessions.set(session.id, session);
   return toView(session);
+}
+
+/**
+ * 对局刚进入终态时写一条战绩。
+ * 登录用户才记，且靠 recorded 标记保证一局只写一次。
+ */
+function persist(session: GameSession): void {
+  if (session.recorded || session.userId === null || !isFinished(session.status)) return;
+  session.recorded = true;
+  const answer = getCharacter(session.answerId);
+  recordSoloGame({
+    userId: session.userId,
+    mode: session.mode,
+    difficulty: session.difficulty,
+    status: session.status,
+    guessCount: session.guesses.length,
+    answerId: session.answerId,
+    answerName: answer?.name ?? String(session.answerId),
+    durationMs: Math.max(0, session.updatedAt - session.startedAt),
+    dateKey: session.dateKey,
+  });
 }
 
 export function getGame(sessionId: string): GameStateView | null {
@@ -140,6 +172,7 @@ export function submitGuess(
   session.updatedAt = Date.now();
   if (feedback.correct) session.status = 'won';
   else if (session.guesses.length >= MAX_GUESSES) session.status = 'lost';
+  persist(session);
 
   return { ok: true, state: toView(session), feedback };
 }
@@ -154,6 +187,7 @@ export function revealAnswer(
   }
   if (!isFinished(session.status)) session.status = 'revealed';
   session.updatedAt = Date.now();
+  persist(session);
   return { ok: true, state: toView(session) };
 }
 

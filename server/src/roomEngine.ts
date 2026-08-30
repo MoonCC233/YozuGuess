@@ -21,6 +21,7 @@ import {
   type RoundResult,
 } from '@yozu/shared';
 import { config } from './config.js';
+import { recordMatch } from './accounts.js';
 
 export interface RoomPlayer {
   key: string;
@@ -36,6 +37,8 @@ export interface RoomPlayer {
   /** 本小局是否已经不能再猜（猜中或用完机会） */
   done: boolean;
   joinedAt: number;
+  /** 加入时的登录用户，未登录为 null；整场结束时用来落库 */
+  userId: number | null;
 }
 
 export interface Room {
@@ -53,6 +56,8 @@ export interface Room {
   matchResult: MatchResult | null;
   revision: number;
   updatedAt: number;
+  /** 整场战绩是否已落库，防止重复写入 */
+  recorded: boolean;
   /** 答案选取函数，测试时可注入以获得确定性 */
   pickAnswer: (difficulty: Difficulty) => Character;
 }
@@ -105,6 +110,7 @@ function makePlayer(opts: {
   spectator: boolean;
   isHost: boolean;
   now: number;
+  userId?: number | null;
 }): RoomPlayer {
   return {
     key: randomUUID(),
@@ -118,6 +124,7 @@ function makePlayer(opts: {
     solvedAt: null,
     done: false,
     joinedAt: opts.now,
+    userId: opts.userId ?? null,
   };
 }
 
@@ -135,6 +142,7 @@ export function createRoom(opts: {
   roundDurationMs?: number;
   pickAnswer?: (difficulty: Difficulty) => Character;
   now?: number;
+  userId?: number | null;
 }): RoomResult<{ room: Room; player: RoomPlayer }> {
   const now = opts.now ?? Date.now();
   sweep(now);
@@ -145,6 +153,7 @@ export function createRoom(opts: {
     spectator: false,
     isHost: true,
     now,
+    userId: opts.userId ?? null,
   });
   const room: Room = {
     code: generateCode(),
@@ -161,6 +170,7 @@ export function createRoom(opts: {
     matchResult: null,
     revision: 1,
     updatedAt: now,
+    recorded: false,
     pickAnswer: opts.pickAnswer ?? pickRandomAnswer,
   };
   rooms.set(room.code, room);
@@ -181,7 +191,13 @@ export function findRoomByPlayerKey(key: string): Room | undefined {
 
 export function joinRoom(
   code: string,
-  opts: { name: string; socketId: string | null; spectator: boolean; now?: number }
+  opts: {
+    name: string;
+    socketId: string | null;
+    spectator: boolean;
+    now?: number;
+    userId?: number | null;
+  }
 ): RoomResult<{ room: Room; player: RoomPlayer }> {
   const now = opts.now ?? Date.now();
   const room = getRoom(code);
@@ -198,6 +214,7 @@ export function joinRoom(
     spectator: asSpectator,
     isHost: false,
     now,
+    userId: opts.userId ?? null,
   });
   // 已开局后加入的人只能旁观，本小局不参与作答
   if (asSpectator) {
@@ -232,9 +249,40 @@ function reassignHost(room: Room): void {
   if (next) next.isHost = true;
 }
 
+/**
+ * 整场结束时给每个登录玩家写一条战绩。
+ * 靠 room.recorded 保证一场只写一次；resetMatch 会把标记清掉，让再来一局重新计。
+ * extra 用于收录已经离开 players 数组的玩家，弃权者也该留下这条败绩。
+ */
+function persistMatch(room: Room, extra: RoomPlayer[] = []): void {
+  if (room.recorded || room.status !== 'finished') return;
+  room.recorded = true;
+  const contenders = [...activePlayers(room), ...extra.filter((p) => !p.spectator)];
+  const winnerKey = room.matchResult?.winnerKey ?? null;
+  const reason = room.matchResult?.reason ?? 'score';
+  for (const player of contenders) {
+    if (player.userId === null) continue;
+    const rivals = contenders.filter((p) => p.key !== player.key);
+    const rivalScore = rivals.reduce((best, p) => Math.max(best, p.score), 0);
+    const result = winnerKey === null ? 'draw' : winnerKey === player.key ? 'won' : 'lost';
+    recordMatch({
+      userId: player.userId,
+      roomCode: room.code,
+      boType: room.boType,
+      difficulty: room.difficulty,
+      result,
+      ownScore: player.score,
+      rivalScore,
+      opponents: rivals.map((p) => p.name),
+      reason,
+    });
+  }
+}
+
 export function leaveRoom(key: string, now = Date.now()): Room | undefined {
   const room = findRoomByPlayerKey(key);
   if (!room) return undefined;
+  const quitter = room.players.find((p) => p.key === key);
   room.players = room.players.filter((p) => p.key !== key);
   if (room.players.length === 0) {
     rooms.delete(room.code);
@@ -249,6 +297,7 @@ export function leaveRoom(key: string, now = Date.now()): Room | undefined {
     room.roundEndsAt = null;
     room.nextRoundAt = null;
     room.matchResult = { winnerKey: survivor.key, reason: 'forfeit' };
+    persistMatch(room, quitter ? [quitter] : []);
   }
   touch(room, now);
   return room;
@@ -367,6 +416,7 @@ export function endRound(room: Room, now = Date.now()): Room {
     room.matchResult = { winnerKey: champion.key, reason: 'score' };
     room.roundEndsAt = null;
     room.nextRoundAt = null;
+    persistMatch(room);
   } else if (roundsPlayedOut) {
     // 打满赛制局数仍未有人达到胜利数：按总比分决出，比分相同则平局
     const ranked = [...activePlayers(room)].sort((a, b) => b.score - a.score);
@@ -377,6 +427,7 @@ export function endRound(room: Room, now = Date.now()): Room {
     room.matchResult = { winnerKey: drawn ? null : (top?.key ?? null), reason: 'score' };
     room.roundEndsAt = null;
     room.nextRoundAt = null;
+    persistMatch(room);
   } else {
     room.status = 'roundEnd';
     room.roundEndsAt = null;
@@ -435,6 +486,7 @@ export function resetMatch(room: Room, now = Date.now()): Room {
   room.nextRoundAt = null;
   room.roundResult = null;
   room.matchResult = null;
+  room.recorded = false;
   for (const p of room.players) {
     p.score = 0;
     p.guesses = [];
@@ -460,6 +512,7 @@ export function tickRooms(now = Date.now()): Room[] {
         room.nextRoundAt = null;
         const top = [...activePlayers(room)].sort((a, b) => b.score - a.score)[0];
         room.matchResult = { winnerKey: top?.key ?? null, reason: 'forfeit' };
+        persistMatch(room);
         touch(room, now);
       }
       changed.push(room);
