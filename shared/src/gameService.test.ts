@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { compareGuess, hiddenGuess, MAX_GUESSES } from './gameService.js';
 import type { Character } from './types.js';
+import { GAME_TITLES } from './types.js';
 
 function make(partial: Partial<Character> & Pick<Character, 'id' | 'name'>): Character {
   return {
@@ -130,5 +131,20 @@ describe('hiddenGuess', () => {
 describe('constants', () => {
   it('allows 8 guesses', () => {
     expect(MAX_GUESSES).toBe(8);
+  });
+});
+
+describe('GAME_TITLES', () => {
+  it('lists titles in chronological release order', () => {
+    const years = Object.values(GAME_TITLES).map((t) => t.year);
+    for (let i = 1; i < years.length; i += 1) {
+      expect(years[i]!).toBeGreaterThanOrEqual(years[i - 1]!);
+    }
+  });
+
+  it('uses the actual release year of each title', () => {
+    expect(GAME_TITLES.braban.year).toBe(2006);
+    expect(GAME_TITLES.exe.year).toBe(2007);
+    expect(GAME_TITLES.limelight.year).toBe(2023);
   });
 });

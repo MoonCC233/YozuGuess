@@ -103,7 +103,7 @@ export interface GuessFeedback {
 }
 
 export const GAME_TITLES: Record<GameTitle, { zh: string; jp: string; short: string; year: number }> = {
-  braban: { zh: '管乐恋曲!', jp: 'ぶらばん! -The bonds of melody-', short: '管乐', year: 2009 },
+  braban: { zh: '管乐恋曲!', jp: 'ぶらばん! -The bonds of melody-', short: '管乐', year: 2006 },
   exe: { zh: 'E×E', jp: 'エグゼ', short: 'E×E', year: 2007 },
   natsora: { zh: '夏空彼方', jp: '夏空カナタ', short: '夏空', year: 2008 },
   tenran: { zh: '天神乱漫', jp: '天神乱漫', short: '天神', year: 2009 },
