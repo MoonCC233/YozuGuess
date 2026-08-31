@@ -890,6 +890,17 @@ strong {
   margin: 0;
 }
 
+/* .card 是普通块容器（无 flex gap），块级子元素相邻时会贴死。
+   按钮带 btn-lg 的外发光，贴死后会盖住上方选项卡的边框，所以要留出更宽的间距。 */
+.card > * + .actions {
+  margin-top: var(--space-5);
+}
+
+.card > p + .dims,
+.card > .dims + p {
+  margin-top: var(--space-4);
+}
+
 .card-resume {
   border-color: var(--edge-citrus);
   box-shadow: 0 0 0 1px var(--fill-citrus-3), var(--shadow-sm);
