@@ -1,11 +1,12 @@
 import { Fragment } from 'react';
 import { Link } from 'react-router-dom';
-import { DIFFICULTIES, DIFFICULTY_META, GAME_TITLES } from '@yozu/shared';
+import { DAILY_DIFFICULTY, DIFFICULTIES, DIFFICULTY_META, GAME_TITLES } from '@yozu/shared';
 import { useMeta } from '../MetaContext.js';
 
 export function Rules() {
   const { meta } = useMeta();
   const max = meta?.maxGuesses ?? 8;
+  const dailySize = meta?.poolSizes[meta?.dailyDifficulty ?? DAILY_DIFFICULTY];
 
   return (
     <section className="page rules">
@@ -59,8 +60,10 @@ export function Rules() {
       <div className="card">
         <h2>模式与难度</h2>
         <p>
-          <strong>自由练习</strong>每局随机抽题，<strong>每日一柚</strong>当天全网同一个答案。
-          难度共四个阶层，只影响<strong>答案池</strong>；任何难度都允许猜任意角色，方便用配角试探属性。
+          <strong>自由练习</strong>每局随机抽题，可自选下面四档难度。
+          <strong>每日一柚</strong>当天全网同一个答案，<strong>不分难度</strong>，固定从全作品全角色
+          {dailySize ? `（${dailySize} 位）` : ''}中抽题。
+          难度只影响<strong>答案池</strong>；任何难度都允许猜任意角色，方便用配角试探属性。
         </p>
         <dl className="dims">
           {DIFFICULTIES.map((id) => {

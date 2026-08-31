@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import {
+  DAILY_DIFFICULTY,
   MAX_GUESSES,
   compareGuess,
   getCharacter,
@@ -92,15 +93,15 @@ export function startGame(
 ): GameStateView {
   sweep();
   const now = Date.now();
-  const dateKey = mode === 'daily' ? toDateKey(new Date()) : null;
-  const answer =
-    mode === 'daily' && dateKey
-      ? pickDailyAnswer(difficulty, dateKey)
-      : pickRandomAnswer(difficulty);
+  const isDaily = mode === 'daily';
+  // 每日一柚不分难度，固定用全作品全角色的答案池
+  const effectiveDifficulty = isDaily ? DAILY_DIFFICULTY : difficulty;
+  const dateKey = isDaily ? toDateKey(new Date()) : null;
+  const answer = isDaily && dateKey ? pickDailyAnswer(dateKey) : pickRandomAnswer(effectiveDifficulty);
   const session: GameSession = {
     id: randomUUID(),
     mode,
-    difficulty,
+    difficulty: effectiveDifficulty,
     dateKey,
     answerId: answer.id,
     guesses: [],

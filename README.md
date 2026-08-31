@@ -32,13 +32,13 @@
 
 | 模式 | 说明 |
 | --- | --- |
-| 自由练习 | 每局随机抽取答案，可无限重开 |
-| 每日一柚 | 当天所有玩家同一个答案，按本地日期切换 |
+| 自由练习 | 每局随机抽取答案，可无限重开，难度自选 |
+| 每日一柚 | 当天所有玩家同一个答案，按本地日期切换；**不分难度**，固定从全作品全角色（167 位）中抽题 |
 | 联机对战 | 房间内多人同题竞速，BO1 / BO3 / BO5 / BO7，详见[联机对战](#联机对战) |
 
 ### 难度
 
-四档阶层：
+四档阶层，只作用于自由练习与联机对战：
 
 | 阶层 | 花名 | 答案池 | 人数 |
 | --- | --- | --- | --- |
@@ -49,7 +49,7 @@
 
 四档都允许猜任意角色，方便用池外配角试探属性。
 
-接口取值为 `easy` / `normal` / `hard` / `hell`。早期版本的 `heroine` / `full` 由迁移（`user_version` 2）改写成四档；随后普通与困难整体互换，历史记录也由迁移（`user_version` 3）跟着换，仍指向当初玩的那个答案池。
+接口取值为 `easy` / `normal` / `hard` / `hell`。`POST /api/game/start` 传 `mode: 'daily'` 时会忽略 `difficulty`，一律按 `/api/meta` 里的 `dailyDifficulty`（即 `hell`）出题，落库的战绩也记这一档。早期版本的 `heroine` / `full` 由迁移（`user_version` 2）改写成四档；随后普通与困难整体互换，历史记录也由迁移（`user_version` 3）跟着换，仍指向当初玩的那个答案池。
 
 ## 联机对战
 
@@ -127,7 +127,7 @@
 | 规则 | 说明 |
 | --- | --- |
 | 匿名局不记录 | 未登录时开的单人局不会写入任何战绩（联机必须登录，不存在匿名场） |
-| 每日一柚每天只计第一次 | 靠数据库唯一索引保证，同一天重开不会刷数据 |
+| 每日一柚每天只计第一次 | 靠数据库唯一索引保证，同一天重开不会刷数据；每日局固定记为地狱模式（全角色池） |
 | 自由练习每局都记 | 想刷多少局都行 |
 | 放弃看答案算一局 | 状态记为 `revealed`，计入场次但不计胜 |
 | 联机重赛单独计一场 | 房主重置比分后是新的一场 |
@@ -202,11 +202,11 @@ pnpm start      # http://localhost:3000
 | 端点 | 说明 |
 | --- | --- |
 | `GET /api/health` | 健康检查 |
-| `GET /api/meta` | 最大猜测次数、作品元数据、四档难度描述（`difficulties`）与各档答案池大小（`poolSizes`） |
+| `GET /api/meta` | 最大猜测次数、作品元数据、四档难度描述（`difficulties`）、各档答案池大小（`poolSizes`）与每日一柚固定档位（`dailyDifficulty`） |
 | `GET /api/characters` | 猜测用角色列表（仅 `id` / `name` / `nameJp`，不含答案属性） |
 | `GET /api/characters/search?q=` | 按中/日文名模糊搜索 |
 | `GET /api/codex` | 图鉴：完整角色资料 + 声优同人化名 |
-| `POST /api/game/start` | 开始对局，body: `{ mode, difficulty }`，`difficulty` 取 `easy` / `normal` / `hard` / `hell` |
+| `POST /api/game/start` | 开始对局，body: `{ mode, difficulty }`，`difficulty` 取 `easy` / `normal` / `hard` / `hell`；`mode: 'daily'` 时忽略 `difficulty`，固定用全角色池 |
 | `GET /api/game/:sessionId` | 读取进行中的对局（未结束时不返回答案） |
 | `POST /api/game/guess` | 提交猜测，body: `{ sessionId, characterId }` |
 | `POST /api/game/reveal` | 放弃并公布答案，body: `{ sessionId }` |

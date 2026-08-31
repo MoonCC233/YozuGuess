@@ -98,6 +98,9 @@ export function pickRandomAnswer(difficulty: Difficulty): Character {
   return picked;
 }
 
+/** 每日一柚固定的答案池：全作品全角色，与难度无关 */
+export const DAILY_DIFFICULTY: Difficulty = 'hell';
+
 /** 32 位 FNV-1a，用于每日谜题的稳定散列 */
 function fnv1a(input: string): number {
   let hash = 0x811c9dc5;
@@ -108,11 +111,11 @@ function fnv1a(input: string): number {
   return hash >>> 0;
 }
 
-/** 每日谜题：同一天 + 同一难度得到固定答案 */
-export function pickDailyAnswer(difficulty: Difficulty, dateKey: string): Character {
-  const pool = getAnswerPool(difficulty);
+/** 每日谜题：同一天全网同一个答案，答案池固定为全作品全角色 */
+export function pickDailyAnswer(dateKey: string): Character {
+  const pool = getAnswerPool(DAILY_DIFFICULTY);
   if (pool.length === 0) throw new Error('answer pool is empty');
-  const index = fnv1a(`${dateKey}:${difficulty}`) % pool.length;
+  const index = fnv1a(`${dateKey}:${DAILY_DIFFICULTY}`) % pool.length;
   const picked = pool[index];
   if (!picked) throw new Error('answer pool is empty');
   return picked;

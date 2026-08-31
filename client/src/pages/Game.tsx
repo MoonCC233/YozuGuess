@@ -70,7 +70,8 @@ export function Game() {
     const fresh = params.get('fresh') === '1';
 
     if (fresh) {
-      setParams(new URLSearchParams({ mode, difficulty }), { replace: true });
+      const next = mode === 'daily' ? new URLSearchParams({ mode }) : new URLSearchParams({ mode, difficulty });
+      setParams(next, { replace: true });
       void begin(mode, difficulty);
       return;
     }
@@ -155,7 +156,9 @@ export function Game() {
       <header className="game-head">
         <div>
           <h1 className="title-sm">
-            {state.mode === 'daily' ? '每日一柚' : '自由练习'} · {difficultyLabel(state.difficulty)}
+            {state.mode === 'daily'
+              ? '每日一柚 · 全作品全角色'
+              : `自由练习 · ${difficultyLabel(state.difficulty)}`}
           </h1>
           {state.mode === 'daily' && state.dateKey ? <p className="muted">今日题目：{state.dateKey}</p> : null}
         </div>

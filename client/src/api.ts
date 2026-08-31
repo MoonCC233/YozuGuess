@@ -39,6 +39,8 @@ export interface MetaInfo {
   titles: Record<GameTitle, TitleMeta>;
   difficulties: DifficultyInfo[];
   poolSizes: Record<Difficulty, number>;
+  /** 每日一柚固定使用的答案池档位 */
+  dailyDifficulty: Difficulty;
   totalCharacters: number;
 }
 

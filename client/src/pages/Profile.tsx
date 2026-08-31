@@ -241,7 +241,7 @@ export function Profile() {
                 <span className="history-main">
                   {g.answerName}
                   <small>
-                    {g.mode === 'daily' ? '每日一柚' : '自由练习'} · {difficultyLabel(g.difficulty)} ·{' '}
+                    {g.mode === 'daily' ? '每日一柚' : `自由练习 · ${difficultyLabel(g.difficulty)}`} ·{' '}
                     {g.guessCount} 次
                   </small>
                 </span>

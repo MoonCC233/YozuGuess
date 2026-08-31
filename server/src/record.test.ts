@@ -92,7 +92,7 @@ function waitForState(
 describe('solo game recording', () => {
   it('records a win for a signed-in player', async () => {
     const { id, cookie } = await signIn('记录者');
-    const answer = pickDailyAnswer('easy', toDateKey(new Date()));
+    const answer = pickDailyAnswer(toDateKey(new Date()));
     const start = await request(server.http)
       .post('/api/game/start')
       .set('Cookie', cookie)
@@ -113,7 +113,7 @@ describe('solo game recording', () => {
 
   it('records a loss after running out of guesses', async () => {
     const { id, cookie } = await signIn('输家');
-    const answer = pickDailyAnswer('easy', toDateKey(new Date()));
+    const answer = pickDailyAnswer(toDateKey(new Date()));
     const start = await request(server.http)
       .post('/api/game/start')
       .set('Cookie', cookie)
@@ -155,7 +155,7 @@ describe('solo game recording', () => {
 
   it('keeps only the first daily result but records every free game', async () => {
     const { id, cookie } = await signIn('每日党');
-    const answer = pickDailyAnswer('easy', toDateKey(new Date()));
+    const answer = pickDailyAnswer(toDateKey(new Date()));
     for (let i = 0; i < 2; i += 1) {
       const start = await request(server.http)
         .post('/api/game/start')

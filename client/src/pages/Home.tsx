@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { DIFFICULTIES, DIFFICULTY_META } from '@yozu/shared';
+import { DAILY_DIFFICULTY, DIFFICULTIES, DIFFICULTY_META } from '@yozu/shared';
 import type { Difficulty, GameMode } from '../api.js';
 import { useMeta } from '../MetaContext.js';
 import { loadSession } from '../storage.js';
@@ -17,8 +17,16 @@ export function Home() {
     setHasSaved(loadSession() !== null);
   }, []);
 
+  const dailyDifficulty = meta?.dailyDifficulty ?? DAILY_DIFFICULTY;
+  const dailySize = meta?.poolSizes[dailyDifficulty];
+
   function start() {
-    navigate(`/game?mode=${mode}&difficulty=${difficulty}&fresh=1`);
+    // 每日一柚不分难度，服务端固定用全角色池，链接里也不带难度
+    if (mode === 'daily') {
+      navigate('/game?mode=daily&fresh=1');
+      return;
+    }
+    navigate(`/game?mode=free&difficulty=${difficulty}&fresh=1`);
   }
 
   return (
@@ -63,33 +71,43 @@ export function Home() {
         </div>
       </div>
 
-      <div className="card">
-        <h2>难度</h2>
-        <div className="choice-group choice-quad" role="radiogroup" aria-label="难度">
-          {DIFFICULTIES.map((id) => {
-            const info = meta?.difficulties.find((d) => d.id === id) ?? DIFFICULTY_META[id];
-            const size = meta?.poolSizes[id];
-            return (
-              <button
-                key={id}
-                type="button"
-                role="radio"
-                aria-checked={difficulty === id}
-                aria-label={`${info.tier} ${info.label}`}
-                className={`choice ${difficulty === id ? 'selected' : ''}`}
-                onClick={() => setDifficulty(id)}
-              >
-                <small className="choice-tier">{info.tier}</small>
-                <strong className="choice-label">{info.label}</strong>
-                <span>
-                  {info.desc}
-                  {size ? `（${size} 位）` : ''}
-                </span>
-              </button>
-            );
-          })}
+      {mode === 'daily' ? (
+        <div className="card">
+          <h2>难度</h2>
+          <p className="muted">
+            每日一柚不分难度，固定从<strong>全作品全角色</strong>
+            {dailySize ? `（${dailySize} 位）` : ''}中抽题。
+          </p>
         </div>
-      </div>
+      ) : (
+        <div className="card">
+          <h2>难度</h2>
+          <div className="choice-group choice-quad" role="radiogroup" aria-label="难度">
+            {DIFFICULTIES.map((id) => {
+              const info = meta?.difficulties.find((d) => d.id === id) ?? DIFFICULTY_META[id];
+              const size = meta?.poolSizes[id];
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  role="radio"
+                  aria-checked={difficulty === id}
+                  aria-label={`${info.tier} ${info.label}`}
+                  className={`choice ${difficulty === id ? 'selected' : ''}`}
+                  onClick={() => setDifficulty(id)}
+                >
+                  <small className="choice-tier">{info.tier}</small>
+                  <strong className="choice-label">{info.label}</strong>
+                  <span>
+                    {info.desc}
+                    {size ? `（${size} 位）` : ''}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="actions">
         <button type="button" className="btn btn-primary btn-lg" onClick={start}>

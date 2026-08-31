@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  DAILY_DIFFICULTY,
   DIFFICULTIES,
   DIFFICULTY_META,
   EIGHT_TITLES,
@@ -67,26 +68,34 @@ describe('answer pools', () => {
 });
 
 describe('daily answer', () => {
-  it('is stable for the same date and difficulty', () => {
-    const a = pickDailyAnswer('easy', '2026-08-30');
-    const b = pickDailyAnswer('easy', '2026-08-30');
+  it('is stable for the same date', () => {
+    const a = pickDailyAnswer('2026-08-30');
+    const b = pickDailyAnswer('2026-08-30');
     expect(a.id).toBe(b.id);
   });
 
   it('varies across dates', () => {
     const ids = new Set(
       ['2026-08-30', '2026-08-31', '2026-09-01', '2026-09-02', '2026-09-03'].map(
-        (d) => pickDailyAnswer('easy', d).id
+        (d) => pickDailyAnswer(d).id
       )
     );
     expect(ids.size).toBeGreaterThan(1);
   });
 
-  it('stays inside the pool for every difficulty', () => {
-    for (const d of DIFFICULTIES) {
-      const ids = new Set(getAnswerPool(d).map((c) => c.id));
-      expect(ids.has(pickDailyAnswer(d, '2026-08-30').id)).toBe(true);
+  it('always draws from every character regardless of difficulty', () => {
+    expect(DAILY_DIFFICULTY).toBe('hell');
+    expect(getAnswerPool(DAILY_DIFFICULTY)).toHaveLength(CHARACTERS.length);
+    const ids = new Set(CHARACTERS.map((c) => c.id));
+    for (const d of ['2026-08-30', '2026-09-15', '2027-01-01']) {
+      expect(ids.has(pickDailyAnswer(d).id)).toBe(true);
     }
+  });
+
+  it('reaches characters outside the narrower pools over time', () => {
+    const easyIds = new Set(getAnswerPool('easy').map((c) => c.id));
+    const keys = Array.from({ length: 400 }, (_, i) => `2026-01-${i}`);
+    expect(keys.some((k) => !easyIds.has(pickDailyAnswer(k).id))).toBe(true);
   });
 
   it('formats date keys as YYYY-MM-DD', () => {

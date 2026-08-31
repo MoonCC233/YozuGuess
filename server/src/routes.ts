@@ -2,6 +2,7 @@ import { Router, type Router as ExpressRouter } from 'express';
 import { z } from 'zod';
 import {
   CHARACTERS,
+  DAILY_DIFFICULTY,
   DIFFICULTIES,
   DIFFICULTY_META,
   GAME_TITLES,
@@ -116,6 +117,8 @@ api.get('/meta', readLimit, (_req, res) => {
       poolSize: getAnswerPool(id).length,
     })),
     poolSizes: Object.fromEntries(DIFFICULTIES.map((id) => [id, getAnswerPool(id).length])),
+    // 每日一柚固定用这一档的答案池，前端据此提示范围
+    dailyDifficulty: DAILY_DIFFICULTY,
     totalCharacters: CHARACTERS.length,
   });
 });
