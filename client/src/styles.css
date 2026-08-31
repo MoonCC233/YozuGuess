@@ -1480,7 +1480,7 @@ input[type='checkbox']:focus-visible {
 }
 
 .codex {
-  min-width: 860px;
+  min-width: 780px;
 }
 
 .codex td {
@@ -1500,6 +1500,14 @@ input[type='checkbox']:focus-visible {
 .aliases {
   display: block;
   font-size: 11px;
+  color: var(--text-faint);
+}
+
+/* 日文名跟在中文名下方，排版与「同一位声优」的副行一致 */
+.name-jp {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
   color: var(--text-faint);
 }
 

@@ -68,7 +68,6 @@ export function Codex() {
           <thead>
             <tr>
               <th scope="col">角色</th>
-              <th scope="col">日文名</th>
               <th scope="col">作品</th>
               <th scope="col">位次</th>
               <th scope="col">发色</th>
@@ -82,8 +81,8 @@ export function Codex() {
               <tr key={c.id}>
                 <th scope="row" className="row-name">
                   {c.name}
+                  {c.nameJp !== c.name ? <small className="name-jp">{c.nameJp}</small> : null}
                 </th>
-                <td>{c.nameJp}</td>
                 <td>{titles?.[c.title]?.zh ?? c.title}</td>
                 <td>{c.rank}</td>
                 <td>{c.hair}</td>
@@ -97,7 +96,7 @@ export function Codex() {
             ))}
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={8} className="muted">
+                <td colSpan={7} className="muted">
                   没有匹配的角色
                 </td>
               </tr>
