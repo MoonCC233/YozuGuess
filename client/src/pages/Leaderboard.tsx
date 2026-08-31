@@ -30,7 +30,7 @@ export function Leaderboard() {
 
       <div className="card">
         {entries === null ? (
-          <p className="muted">加载中…</p>
+          <p className="loading">加载中…</p>
         ) : entries.length === 0 ? (
           <p className="muted">还没有人上榜，第一个就是你。</p>
         ) : (

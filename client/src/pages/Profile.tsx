@@ -171,7 +171,7 @@ export function Profile() {
   if (loading || !user) {
     return (
       <section className="page">
-        <p className="muted">加载中…</p>
+        <p className="loading">加载中…</p>
       </section>
     );
   }
@@ -226,7 +226,7 @@ export function Profile() {
           </div>
         </>
       ) : (
-        <p className="muted">统计加载中…</p>
+        <p className="loading">统计加载中…</p>
       )}
 
       <div className="card">

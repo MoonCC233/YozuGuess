@@ -77,3 +77,25 @@ export function clearRoom(): void {
     // 忽略
   }
 }
+
+const THEME_KEY = 'yozu:theme';
+
+export type ThemePref = 'system' | 'light' | 'dark';
+
+export function saveTheme(pref: ThemePref): void {
+  try {
+    localStorage.setItem(THEME_KEY, pref);
+  } catch {
+    // 忽略
+  }
+}
+
+export function loadTheme(): ThemePref {
+  try {
+    const raw = localStorage.getItem(THEME_KEY);
+    if (raw === 'light' || raw === 'dark' || raw === 'system') return raw;
+  } catch {
+    // 忽略
+  }
+  return 'system';
+}

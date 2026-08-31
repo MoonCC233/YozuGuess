@@ -3,6 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#100c1c" />
+    <script>
+      // 首帧前定下主题，避免刷新时闪白/闪黑（FOUC）
+      (function () {
+        try {
+          var saved = localStorage.getItem('yozu:theme');
+          var pref = saved === 'light' || saved === 'dark' ? saved : null;
+          if (!pref) {
+            pref = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+          }
+          document.documentElement.dataset.theme = pref;
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', pref === 'light' ? '#fff8ec' : '#100c1c');
+        } catch (e) {
+          document.documentElement.dataset.theme = 'dark';
+        }
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&display=swap"
+    />
     <title>柚一把 · 柚子社角色猜谜</title>
     <meta name="description" content="柚一把：猜出柚子社全作品中的角色，逐属性反馈的类 Wordle 玩法。" />
   </head>

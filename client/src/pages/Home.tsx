@@ -4,6 +4,7 @@ import { DIFFICULTIES, DIFFICULTY_META } from '@yozu/shared';
 import type { Difficulty, GameMode } from '../api.js';
 import { useMeta } from '../MetaContext.js';
 import { loadSession } from '../storage.js';
+import { brandLogo } from '../brandLogo.js';
 
 export function Home() {
   const navigate = useNavigate();
@@ -22,8 +23,18 @@ export function Home() {
 
   return (
     <section className="page home">
-      <h1 className="title">柚一把</h1>
-      <p className="subtitle">在 {meta?.maxGuesses ?? 8} 次机会内猜出柚子社作品中的角色</p>
+      <div className="hero">
+        <img className="hero-art" src={brandLogo} alt="" aria-hidden="true" width={104} height={104} />
+        <div className="hero-copy">
+          <h1 className="title">柚一把</h1>
+          <p className="subtitle">在 {meta?.maxGuesses ?? 8} 次机会内猜出柚子社作品中的角色</p>
+          <ul className="hero-tags">
+            <li className="badge">作品 · 位次 · 发色 · 瞳色</li>
+            <li className="badge">年份 · 爆闪 · 声优</li>
+            <li className="badge badge-done">共 {meta?.totalCharacters ?? '—'} 位角色</li>
+          </ul>
+        </div>
+      </div>
       {error ? <p className="alert">{error}</p> : null}
 
       <div className="card">

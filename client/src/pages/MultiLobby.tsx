@@ -86,7 +86,7 @@ export function MultiLobby() {
     return (
       <section className="page lobby">
         <h1 className="title">联机对战</h1>
-        <p className="muted">正在确认登录状态…</p>
+        <p className="loading">正在确认登录状态…</p>
       </section>
     );
   }
