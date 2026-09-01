@@ -228,7 +228,7 @@ pnpm start      # http://localhost:3000
 
 - [`shared/src/characters.ts`](shared/src/characters.ts) —— 柚子社全 13 作共 167 位角色，字段取自萌娘百科
 - [`shared/src/divide.json`](shared/src/divide.json) —— 声优化名分组（同一位声优在不同作品的署名），用于「接近」判定
-- [`client/public/portraits/`](client/public/portraits) —— 角色立绘，166 位角色各两档 webp（`card/` 长边 400，`thumb/` 长边 128），按角色 id 命名
+- [`client/public/portraits/`](client/public/portraits) —— 角色立绘，全 167 位角色各两档 webp（`card/` 长边 400，`thumb/` 长边 128），按角色 id 命名
 
 猜测时若两个角色的 CV 是同一位声优的不同化名，声优列判为 🟨 接近；占位值 `无`（男主角）与 `未知` 不参与同人判定。
 
@@ -243,7 +243,7 @@ node scripts/build-portraits.mjs
 
 脚本按**角色中文名**匹配 `CHARACTERS` 取 id（源图目录年份与作品年份并不一致，不能按目录推断作品），先 trim 掉透明留白再缩放，同时生成 [`client/src/portraitIds.json`](client/src/portraitIds.json) 供前端判断某角色是否有立绘。任一文件名匹配不上角色时脚本会列出清单并非零退出。
 
-`香住纯`（管乐恋曲! 男主角）暂无立绘，图鉴对缺图角色渲染姓名首字占位。
+立绘目前覆盖全部 167 位角色。若将来新增角色而立绘缺位，`Portrait` 组件会渲染姓名首字占位，布局不会塌陷。
 
 图鉴支持卡片与表格两种视图，切换状态存 localStorage：卡片视图用 `card` 档立绘，表格视图用 `thumb` 档。
 
