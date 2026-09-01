@@ -1355,7 +1355,7 @@ input[type='checkbox']:focus-visible {
 
 .board {
   width: 100%;
-  min-width: 720px;
+  min-width: 800px;
   font-size: 14px;
   border-collapse: separate;
   border-spacing: 3px;
@@ -1399,40 +1399,42 @@ input[type='checkbox']:focus-visible {
   color: var(--wrong-text);
 }
 
+/* 立绘列：宽度跟着 portrait-thumb 固定，避免行高随图片加载跳动 */
+.board-thumb-cell {
+  width: 58px;
+  padding: 4px !important;
+}
+
+.board-thumb-cell .portrait-thumb {
+  /* 比图鉴表格的 48x64 略小，猜测表格行数多，压一档更紧凑 */
+  width: 42px;
+  height: 56px;
+}
+
+.board-thumb-cell .portrait-empty {
+  font-size: 18px;
+}
+
+.row-empty .board-thumb-cell .portrait-empty {
+  opacity: 0.3;
+}
+
+/* 对手视角的猜测本来就是隐藏的，立绘格只剩占位符，压窄一档别白占宽度 */
+.board-compact .board-thumb-cell {
+  width: 34px;
+}
+
+.board-compact .board-thumb-cell .portrait-thumb {
+  width: 24px;
+  height: 32px;
+}
+
 .cell {
   position: relative;
   font-variant-numeric: tabular-nums;
   border-radius: var(--radius-xs);
-  /* 每格反馈翻入，配合逐格延迟形成波浪 */
+  /* 每格反馈翻入，逐格延迟由 GuessBoard 按列序内联下发，形成波浪 */
   animation: cell-flip var(--dur-slow) var(--ease-pop) backwards;
-}
-
-.cell:nth-child(2) {
-  animation-delay: 0ms;
-}
-
-.cell:nth-child(3) {
-  animation-delay: 45ms;
-}
-
-.cell:nth-child(4) {
-  animation-delay: 90ms;
-}
-
-.cell:nth-child(5) {
-  animation-delay: 135ms;
-}
-
-.cell:nth-child(6) {
-  animation-delay: 180ms;
-}
-
-.cell:nth-child(7) {
-  animation-delay: 225ms;
-}
-
-.cell:nth-child(8) {
-  animation-delay: 270ms;
 }
 
 @keyframes cell-flip {
@@ -2026,6 +2028,10 @@ input[type='checkbox']:focus-visible {
   min-width: 46px;
 }
 
+.board-compact .board-thumb-cell .portrait-empty {
+  font-size: 12px;
+}
+
 .round-result {
   padding: var(--space-4) var(--space-5);
   background: var(--bg-card);
@@ -2367,6 +2373,16 @@ input[type='checkbox']:focus-visible {
   .codex-grid {
     grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
     gap: var(--space-3);
+  }
+
+  /* 窄屏靠 board-wrap 横滚，立绘列压小一档少占滚动宽度 */
+  .board-thumb-cell {
+    width: 44px;
+  }
+
+  .board-thumb-cell .portrait-thumb {
+    width: 33px;
+    height: 44px;
   }
 
   .view-switch {
