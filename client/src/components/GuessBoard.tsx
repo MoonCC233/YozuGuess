@@ -2,13 +2,18 @@ import type { AttributeFeedback, GuessFeedback, HiddenGuessFeedback } from '@yoz
 import { useTitleLabel } from '../MetaContext.js';
 import { Portrait } from './Portrait.js';
 
-const COLUMNS: Array<{ key: keyof GuessFeedback['attributes']; label: string }> = [
+const COLUMNS: Array<{
+  key: keyof GuessFeedback['attributes'];
+  label: string;
+  /** 该列箭头的读屏文案，索引 0 对应 ↑（higher）、1 对应 ↓（lower） */
+  hintText?: [string, string];
+}> = [
   { key: 'title', label: '作品' },
-  { key: 'rank', label: '位次' },
+  { key: 'rank', label: '位次', hintText: ['答案位次更靠前', '答案位次更靠后'] },
   { key: 'hair', label: '发色' },
   { key: 'eyes', label: '瞳色' },
-  { key: 'titleYear', label: '年份' },
-  { key: 'bakusen', label: '爆闪' },
+  { key: 'titleYear', label: '年份', hintText: ['答案更大', '答案更小'] },
+  { key: 'bakusen', label: '爆闪', hintText: ['答案更大', '答案更小'] },
   { key: 'cv', label: '声优' },
 ];
 
@@ -31,14 +36,28 @@ function isHidden(guess: GuessFeedback | HiddenGuessFeedback): guess is HiddenGu
   return 'hidden' in guess && guess.hidden;
 }
 
+/** 箭头默认文案（数值型属性）：↑ 答案更大、↓ 答案更小 */
+const DEFAULT_HINT_TEXT: [string, string] = ['答案更大', '答案更小'];
+
+function hintLabel(
+  hint: AttributeFeedback['hint'],
+  hintText: [string, string] = DEFAULT_HINT_TEXT
+): string {
+  if (hint === 'higher') return `，${hintText[0]}`;
+  if (hint === 'lower') return `，${hintText[1]}`;
+  return '';
+}
+
 function Cell({
   attr,
   text,
   delayMs,
+  hintText,
 }: {
   attr: { level: AttributeFeedback['level']; hint?: AttributeFeedback['hint'] };
   text: string;
   delayMs: number;
+  hintText?: [string, string];
 }) {
   const arrow = hintArrow(attr.hint);
   return (
@@ -51,7 +70,7 @@ function Cell({
       ) : null}
       <span className="sr-only">
         {LEVEL_TEXT[attr.level]}
-        {attr.hint === 'higher' ? '，答案更大' : attr.hint === 'lower' ? '，答案更小' : ''}
+        {hintLabel(attr.hint, hintText)}
       </span>
     </td>
   );
@@ -114,7 +133,15 @@ export function GuessBoard({ guesses, maxGuesses, compact = false }: Props) {
                     : c.key === 'title'
                       ? titleLabel(String((attr as AttributeFeedback).value))
                       : String((attr as AttributeFeedback).value);
-                  return <Cell key={c.key} attr={attr} text={text} delayMs={col * FLIP_STEP_MS} />;
+                  return (
+                    <Cell
+                      key={c.key}
+                      attr={attr}
+                      text={text}
+                      delayMs={col * FLIP_STEP_MS}
+                      hintText={c.hintText}
+                    />
+                  );
                 })}
               </tr>
             );

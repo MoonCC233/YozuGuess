@@ -222,7 +222,7 @@ export function Game() {
           <span className="swatch swatch-wrong" aria-hidden="true" />
           不一致
         </li>
-        <li>↑ 答案更大 · ↓ 答案更小</li>
+        <li>↑ 答案更大 / 位次更靠前 · ↓ 答案更小 / 位次更靠后</li>
       </ul>
 
       <Toast message={toast} onDismiss={() => setToast(null)} />

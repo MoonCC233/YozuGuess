@@ -94,27 +94,70 @@ describe('compareGuess', () => {
   });
 
   it('rank within close range yields close with direction hint', () => {
-    const other = make({ id: 2, name: '其他', rank: '二号位' }); // diff 1 <= 1
+    const other = make({ id: 2, name: '其他', rank: '二号位' }); // 阶梯上相邻
     const fb = compareGuess(other, target);
     expect(fb.attributes.rank.level).toBe('close');
-    expect(fb.attributes.rank.hint).toBe('lower');
+    expect(fb.attributes.rank.hint).toBe('higher'); // 答案是一号位，位次更靠前
   });
 
   it('rank far outside range yields wrong with direction hint', () => {
     const other = make({ id: 2, name: '其他', rank: '五号位' });
     const fb = compareGuess(other, target);
     expect(fb.attributes.rank.level).toBe('wrong');
-    expect(fb.attributes.rank.hint).toBe('lower');
+    expect(fb.attributes.rank.hint).toBe('higher');
   });
 
-  it('non-ordinal rank falls back to exact text match', () => {
-    const other = make({ id: 2, name: '其他', rank: '配角' });
-    const fb = compareGuess(other, target);
+  it('主角 sits above 一号位 on the rank ladder', () => {
+    const heroTarget = make({ id: 1, name: '男主', rank: '主角' });
+    const first = make({ id: 2, name: '一号位角色', rank: '一号位' });
+    const fb = compareGuess(first, heroTarget);
+    expect(fb.attributes.rank.level).toBe('close');
+    expect(fb.attributes.rank.hint).toBe('higher'); // 答案（主角）比一号位更靠前
+
+    const reverse = compareGuess(heroTarget, first);
+    expect(reverse.attributes.rank.hint).toBe('lower'); // 答案（一号位）比主角更靠后
+  });
+
+  it('次要 and 配角 are adjacent and both weaker than 号位', () => {
+    const supportTarget = make({ id: 1, name: '目标', rank: '次要' });
+    const extra = make({ id: 2, name: '配角角色', rank: '配角' });
+    const fb = compareGuess(extra, supportTarget);
+    expect(fb.attributes.rank.level).toBe('close');
+    expect(fb.attributes.rank.hint).toBe('higher'); // 次要比配角更靠前
+
+    const seventh = make({ id: 3, name: '七号位角色', rank: '七号位' });
+    const near = compareGuess(seventh, supportTarget);
+    expect(near.attributes.rank.level).toBe('close'); // 七号位与次要相邻
+    expect(near.attributes.rank.hint).toBe('lower'); // 答案（次要）比七号位更靠后
+  });
+
+  it('配角 vs 一号位 is wrong with an upward hint', () => {
+    const extra = make({ id: 2, name: '配角角色', rank: '配角' });
+    const fb = compareGuess(extra, target); // target 是一号位
+    expect(fb.attributes.rank.level).toBe('wrong');
+    expect(fb.attributes.rank.hint).toBe('higher');
+  });
+
+  it('identical non-ordinal ranks still yield correct', () => {
+    const sameText = compareGuess(
+      make({ id: 3, name: '同类', rank: '配角' }),
+      make({ id: 4, name: '目标2', rank: '配角' })
+    );
+    expect(sameText.attributes.rank.level).toBe('correct');
+    expect(sameText.attributes.rank.hint).toBeUndefined();
+  });
+
+  it('unknown rank labels fall back to exact text match', () => {
+    const weird = make({ id: 2, name: '其他', rank: '客串' });
+    const fb = compareGuess(weird, target);
     expect(fb.attributes.rank.level).toBe('wrong');
     expect(fb.attributes.rank.hint).toBeUndefined();
+  });
 
-    const sameText = compareGuess(make({ id: 3, name: '同类', rank: '配角' }), make({ id: 4, name: '目标2', rank: '配角' }));
-    expect(sameText.attributes.rank.level).toBe('correct');
+  it('六号位 keeps 五号位 and 七号位 from being adjacent', () => {
+    const fifth = make({ id: 2, name: '五号位角色', rank: '五号位' });
+    const seventhTarget = make({ id: 1, name: '七号位目标', rank: '七号位' });
+    expect(compareGuess(fifth, seventhTarget).attributes.rank.level).toBe('wrong');
   });
 
   it('different cv alias of the same seiyuu yields close', () => {

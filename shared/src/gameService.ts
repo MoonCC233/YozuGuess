@@ -12,7 +12,7 @@ export const MAX_GUESSES = 8;
 
 // 数值型属性的"接近"阈值
 const BAKUSEN_CLOSE_RANGE = 3;
-const RANK_CLOSE_RANGE = 1; // 角色位次接近阈值（相邻号位视为接近）
+const RANK_CLOSE_RANGE = 1; // 角色位次接近阈值（权重相邻视为接近）
 const YEAR_CLOSE_RANGE = 3; // 作品年份接近阈值
 
 /** 文本型属性：完全一致才 correct */
@@ -35,8 +35,13 @@ function numberAttr(
   };
 }
 
-/** 号位序数映射：'一号位'~'七号位' 可数值比较；'主角'/'次要'/'配角' 无序数 */
-const RANK_ORDINALS: Record<string, number> = {
+/** 位次强弱阶梯：数值越小代表位次越靠前（越重要）。
+ *
+ * 主角（作品男主角）> 一号位 ~ 七号位（女主角，按号位递减）> 次要 > 配角。
+ * `六号位` 目前没有角色，仍保留序号占位，避免五号位与七号位被误判为相邻。
+ */
+export const RANK_ORDER: Record<string, number> = {
+  主角: 0,
   一号位: 1,
   二号位: 2,
   三号位: 3,
@@ -44,27 +49,34 @@ const RANK_ORDINALS: Record<string, number> = {
   五号位: 5,
   六号位: 6,
   七号位: 7,
+  次要: 8,
+  配角: 9,
 };
 
-function rankOrdinal(rank: string): number | null {
-  const fromMap = RANK_ORDINALS[rank];
+/** 取位次在阶梯中的序号；无法定位时返回 null（退化为文本精确匹配） */
+export function rankWeight(rank: string): number | null {
+  const fromMap = RANK_ORDER[rank];
   if (fromMap !== undefined) return fromMap;
   const num = Number(rank);
   if (rank.trim() !== '' && !Number.isNaN(num)) return num;
   return null;
 }
 
-/** 位次属性：号位（'一号位'~'七号位'）按序数比较并带接近提示与方向；
- * 其余（'主角'/'次要'/'配角'）按文本精确匹配处理。 */
+/** 位次属性：全部位次（主角 / 一号位~七号位 / 次要 / 配角）落在同一条阶梯上，
+ * 相同 correct，阶梯上相邻 close，否则 wrong。
+ *
+ * 箭头按「位次强弱」而非阶梯序号给出：`higher` 表示答案的位次比你猜的**更靠前**
+ * （更重要），`lower` 表示更靠后。因为阶梯序号越小位次越强，这里刻意与数值型属性
+ * 的方向相反，读起来才符合 `主角 > 一号位 > … > 配角` 的直觉。 */
 function rankAttr(guessVal: string, targetVal: string): AttributeFeedback {
-  const g = rankOrdinal(guessVal);
-  const t = rankOrdinal(targetVal);
+  const g = rankWeight(guessVal);
+  const t = rankWeight(targetVal);
   if (g === null || t === null) return textAttr(guessVal, targetVal);
   if (g === t) return { value: guessVal, level: 'correct' };
   return {
     value: guessVal,
     level: Math.abs(g - t) <= RANK_CLOSE_RANGE ? 'close' : 'wrong',
-    hint: t > g ? 'higher' : 'lower',
+    hint: t < g ? 'higher' : 'lower',
   };
 }
 
