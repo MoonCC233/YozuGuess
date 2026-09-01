@@ -173,6 +173,7 @@ pnpm start      # http://localhost:3000
 | `pnpm test` | 运行 shared 与 server 的 vitest 用例 |
 | `pnpm typecheck` | 全部包类型检查 |
 | `node scripts/build-portraits.mjs` | 重新生成角色立绘 webp（仅在替换源图后需要，见[立绘资源](#立绘资源)） |
+| `node scripts/build-favicon.mjs` | 从 `logo-1.png` 重新生成 favicon（仅在换 Logo 后需要，见[站点图标](#站点图标)） |
 
 ### 环境变量
 
@@ -253,6 +254,19 @@ node scripts/build-portraits.mjs
 
 图鉴支持卡片与表格两种视图，切换状态存 localStorage：卡片视图用 `card` 档立绘，表格视图用 `thumb` 档。
 
+### 站点图标
+
+页头 Logo 有四张（[`client/public/logos/`](client/public/logos)），每次页面加载随机轮换一张，见 [`client/src/brandLogo.ts`](client/src/brandLogo.ts)。浏览器标签页图标需要固定，所以 [`scripts/build-favicon.mjs`](scripts/build-favicon.mjs) 固定取 `logo-1.png` 生成：
+
+| 产物 | 用途 |
+| --- | --- |
+| `favicon.ico` | 内嵌 16/32/48 三帧 PNG，兼容旧浏览器与 `/favicon.ico` 默认请求 |
+| `favicon-32.png` | 现代浏览器标签页 |
+| `favicon-192.png` | Android 主屏图标 |
+| `apple-touch-icon.png` | iOS 添加到主屏幕，180x180 且压平为不透明（iOS 会把透明区渲染成黑色） |
+
+产物在 `client/public/` 下，随 vite 原样拷进 `client/dist/`，由 server 的静态托管直接提供。四个文件都已提交，换 Logo 后重跑脚本即可。
+
 ## 项目结构
 
 ```
@@ -285,7 +299,8 @@ client/src
 ├── components/      # GuessBoard / GuessInputBar / Portrait / Toast
 └── pages/           # Home / Game / MultiLobby / MultiRoom / Codex / Rules / Login / Profile / Leaderboard
 scripts
-└── build-portraits.mjs  # 立绘源图 -> 两档 webp
+├── build-portraits.mjs  # 立绘源图 -> 两档 webp
+└── build-favicon.mjs    # logo-1.png -> favicon.ico / png / apple-touch-icon
 ```
 
 ## 致谢
