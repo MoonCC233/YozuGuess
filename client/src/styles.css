@@ -1512,8 +1512,8 @@ input[type='checkbox']:focus-visible {
 }
 
 /* ===== 角色立绘 =====
-   源图纵横比从 0.52 到 1.80 不等，用固定格位 + object-fit: contain 兜住，
-   保证卡片网格不被个别长图撑高。 */
+   源图 trim 后纵横比在 0.38~1.46 之间，已由 scripts/build-portraits.mjs 统一裁成
+   3:4 再输出，所以这里格位与图片同比，用 cover 铺满即可，网格不会被个别长图撑高。 */
 .portrait {
   display: grid;
   place-items: center;
@@ -1525,8 +1525,9 @@ input[type='checkbox']:focus-visible {
 .portrait img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  /* 立绘多为半身裁切，重心压在上部更好看 */
+  /* 立绘已由 scripts/build-portraits.mjs 统一裁成 3:4，这里用 cover 铺满格位；
+     残留的亚像素误差由 object-position 压向顶部消化，不会切到脸 */
+  object-fit: cover;
   object-position: center top;
 }
 
@@ -1536,8 +1537,9 @@ input[type='checkbox']:focus-visible {
 }
 
 .portrait-thumb {
-  width: 52px;
-  height: 60px;
+  /* 与 3:4 同比，cover 不会裁掉边缘 */
+  width: 48px;
+  height: 64px;
   border-radius: var(--radius-xs);
 }
 
