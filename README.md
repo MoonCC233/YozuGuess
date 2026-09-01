@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="client/public/favicon-192.png" alt="柚一把" width="120" height="120">
+
 # 柚一把 (YozuGuess)
 
 **柚子社（ゆずソフト）全作品角色猜谜游戏 —— 类 Wordle 玩法**
@@ -267,7 +269,7 @@ node scripts/build-portraits.mjs
 | `favicon-192.png` | Android 主屏图标 |
 | `apple-touch-icon.png` | iOS 添加到主屏幕，180x180 且压平为不透明（iOS 会把透明区渲染成黑色） |
 
-产物在 `client/public/` 下，随 vite 原样拷进 `client/dist/`，由 server 的静态托管直接提供。四个文件都已提交，换 Logo 后重跑脚本即可。
+产物在 `client/public/` 下，随 vite 原样拷进 `client/dist/`，由 server 的静态托管直接提供。四个文件都已提交，换 Logo 后重跑脚本即可。本 README 顶部的标题图标也复用 `favicon-192.png`。
 
 ## 项目结构
 
