@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="client/public/favicon-192.png" alt="柚一把" width="120" height="120">
+<img src="https://proxy.mooncc.eu.cc/https://raw.githubusercontent.com/MoonCC233/YozuGuess/refs/heads/main/client/public/favicon-192.png" alt="柚一把" width="120" height="120">
 
 # 柚一把 (YozuGuess)
 
