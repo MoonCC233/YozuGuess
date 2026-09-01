@@ -29,7 +29,7 @@ export function Rules() {
           </li>
           <li>
             <span className="swatch swatch-close" aria-hidden="true" />
-            黄色：接近 —— 位次相邻、年份相差 3 年内、爆闪次数相差 3 次内，或同一位声优的其他化名
+            黄色：接近 —— 位次相邻、年份相差 3 年内、爆闪次数相差 3 次内、发色 / 瞳色属于同一色系，或同一位声优的其他化名
           </li>
           <li>
             <span className="swatch swatch-wrong" aria-hidden="true" />
@@ -47,7 +47,9 @@ export function Rules() {
           <dt>位次</dt>
           <dd>一号位 ~ 七号位按序数比较；主角 / 次要 / 配角按文本比较</dd>
           <dt>发色 / 瞳色</dt>
-          <dd>文本型，需完全一致才算对</dd>
+          <dd>
+            文本型；完全一致算对，属于同一色系（如橙与黄、红与粉、棕与褐）判为接近
+          </dd>
           <dt>年份</dt>
           <dd>作品发售年份，数值型</dd>
           <dt>爆闪</dt>

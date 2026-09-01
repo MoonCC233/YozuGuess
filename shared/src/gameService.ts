@@ -6,6 +6,7 @@ import type {
 } from './types.js';
 import { GAME_TITLES } from './types.js';
 import { isSameCvPerson } from './cvGroups.js';
+import { isSameColorFamily } from './colorGroups.js';
 
 export const MAX_GUESSES = 8;
 
@@ -67,6 +68,15 @@ function rankAttr(guessVal: string, targetVal: string): AttributeFeedback {
   };
 }
 
+/** 颜色属性（发色 / 瞳色）：完全一致 correct；同色系 close；否则 wrong */
+function colorAttr(guessVal: string, targetVal: string): AttributeFeedback {
+  if (guessVal === targetVal) return { value: guessVal, level: 'correct' };
+  return {
+    value: guessVal,
+    level: isSameColorFamily(guessVal, targetVal) ? 'close' : 'wrong',
+  };
+}
+
 /** 声优属性：化名完全一致 correct；不同化名但为同一位声优（见 divide.json）close；否则 wrong */
 function cvAttr(guessVal: string, targetVal: string): AttributeFeedback {
   if (guessVal === targetVal) return { value: guessVal, level: 'correct' };
@@ -86,8 +96,8 @@ export function compareGuess(guess: Character, target: Character): GuessFeedback
     attributes: {
       title: textAttr(guess.title, target.title),
       rank: rankAttr(guess.rank, target.rank),
-      hair: textAttr(guess.hair, target.hair),
-      eyes: textAttr(guess.eyes, target.eyes),
+      hair: colorAttr(guess.hair, target.hair),
+      eyes: colorAttr(guess.eyes, target.eyes),
       titleYear: numberAttr(GAME_TITLES[guess.title].year, GAME_TITLES[target.title].year, YEAR_CLOSE_RANGE),
       bakusen: numberAttr(guess.bakusen, target.bakusen, BAKUSEN_CLOSE_RANGE),
       cv: cvAttr(guess.cv, target.cv),

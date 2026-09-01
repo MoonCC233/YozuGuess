@@ -216,7 +216,7 @@ export function Game() {
         </li>
         <li>
           <span className="swatch swatch-close" aria-hidden="true" />
-          接近（相邻位次 / 数值相差不大 / 同一位声优的其他化名）
+          接近（相邻位次 / 数值相差不大 / 同色系发色瞳色 / 同一位声优的其他化名）
         </li>
         <li>
           <span className="swatch swatch-wrong" aria-hidden="true" />

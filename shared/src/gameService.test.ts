@@ -47,8 +47,36 @@ describe('compareGuess', () => {
     const other = make({ id: 2, name: '其他', title: 'sengoku', hair: '金', eyes: '红' });
     const fb = compareGuess(other, target);
     expect(fb.attributes.title.level).toBe('wrong');
-    expect(fb.attributes.hair.level).toBe('wrong');
-    expect(fb.attributes.eyes.level).toBe('wrong');
+    expect(fb.attributes.hair.level).toBe('wrong'); // 金 vs 黑：不同色系
+    expect(fb.attributes.eyes.level).toBe('wrong'); // 红 vs 蓝：不同色系
+  });
+
+  it('hair in the same color family yields close', () => {
+    const orangeTarget = make({ id: 1, name: '目标', hair: '橙' });
+    const yellowGuess = make({ id: 2, name: '其他', hair: '黄' });
+    const fb = compareGuess(yellowGuess, orangeTarget);
+    expect(fb.attributes.hair.level).toBe('close');
+    expect(fb.attributes.hair.value).toBe('黄');
+    expect(fb.attributes.hair.hint).toBeUndefined();
+  });
+
+  it('eyes in the same color family yields close', () => {
+    const redTarget = make({ id: 1, name: '目标', eyes: '深红' });
+    const pinkGuess = make({ id: 2, name: '其他', eyes: '红' });
+    expect(compareGuess(pinkGuess, redTarget).attributes.eyes.level).toBe('close');
+  });
+
+  it('未知 eyes never yields close', () => {
+    const unknownTarget = make({ id: 1, name: '目标', eyes: '未知' });
+    const blueGuess = make({ id: 2, name: '其他', eyes: '蓝' });
+    expect(compareGuess(blueGuess, unknownTarget).attributes.eyes.level).toBe('wrong');
+  });
+
+  it('identical colors still yield correct, not close', () => {
+    const other = make({ id: 2, name: '其他', hair: '黑', eyes: '蓝' });
+    const fb = compareGuess(other, target);
+    expect(fb.attributes.hair.level).toBe('correct');
+    expect(fb.attributes.eyes.level).toBe('correct');
   });
 
   it('bakusen within close range yields close with direction hint', () => {
