@@ -10,5 +10,8 @@
     "start": "pnpm --filter @yozu/server start",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "sharp": "0.33.5"
   }
 }

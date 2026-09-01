@@ -5,3 +5,7 @@ dist/
 .env.local
 .DS_Store
 server/data/
+
+# 立绘源图（30MB PNG）与压缩包不入库，仓库只保留 scripts/build-portraits.mjs 生成的 webp
+yuz_char_img/
+yuz_char_img.zip

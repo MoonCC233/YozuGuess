@@ -99,3 +99,25 @@ export function loadTheme(): ThemePref {
   }
   return 'system';
 }
+
+const CODEX_VIEW_KEY = 'yozu:codexView';
+
+export type CodexView = 'card' | 'table';
+
+/** 记住图鉴的卡片 / 表格视图选择 */
+export function saveCodexView(view: CodexView): void {
+  try {
+    localStorage.setItem(CODEX_VIEW_KEY, view);
+  } catch {
+    // 忽略
+  }
+}
+
+export function loadCodexView(): CodexView {
+  try {
+    if (localStorage.getItem(CODEX_VIEW_KEY) === 'table') return 'table';
+  } catch {
+    // 忽略
+  }
+  return 'card';
+}

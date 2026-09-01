@@ -5,3 +5,5 @@ packages:
 
 allowBuilds:
   esbuild: true
+  # sharp 0.33 通过 @img/sharp-* 可选依赖提供预编译二进制，不需要跑安装脚本
+  sharp: false

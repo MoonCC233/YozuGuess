@@ -1480,7 +1480,7 @@ input[type='checkbox']:focus-visible {
 }
 
 .codex {
-  min-width: 780px;
+  min-width: 840px;
 }
 
 .codex td {
@@ -1509,6 +1509,169 @@ input[type='checkbox']:focus-visible {
   font-size: 11px;
   font-weight: 400;
   color: var(--text-faint);
+}
+
+/* ===== 角色立绘 =====
+   源图纵横比从 0.52 到 1.80 不等，用固定格位 + object-fit: contain 兜住，
+   保证卡片网格不被个别长图撑高。 */
+.portrait {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: radial-gradient(115% 90% at 50% 12%, var(--fill-citrus-0), transparent 70%), var(--tint-3);
+  border-radius: var(--radius-sm);
+}
+
+.portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* 立绘多为半身裁切，重心压在上部更好看 */
+  object-position: center top;
+}
+
+.portrait-card {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+}
+
+.portrait-thumb {
+  width: 52px;
+  height: 60px;
+  border-radius: var(--radius-xs);
+}
+
+/* 缺立绘时用姓名首字占位，避免格位塌陷 */
+.portrait-empty {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--citrus-text);
+  opacity: 0.55;
+}
+
+.portrait-card.portrait-empty {
+  font-size: 44px;
+}
+
+.portrait-thumb.portrait-empty {
+  font-size: 22px;
+}
+
+/* ===== 图鉴：卡片视图 ===== */
+.codex-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+  gap: var(--space-4);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.codex-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: linear-gradient(160deg, var(--tint-5), var(--tint-1));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  transition: border-color var(--dur) var(--ease-out), transform var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
+}
+
+.codex-card:hover {
+  border-color: var(--edge-citrus);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-3px);
+}
+
+.codex-card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.codex-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.codex-title {
+  font-size: 12px;
+  color: var(--citrus-text);
+}
+
+.codex-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.codex-tags .badge {
+  min-height: 22px;
+  padding: 2px 8px;
+  font-size: 11px;
+}
+
+.codex-cv {
+  margin: auto 0 0;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.codex-count {
+  margin: 0;
+  font-size: 13px;
+}
+
+/* ===== 图鉴：视图切换 ===== */
+.view-switch {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 3px;
+  padding: 3px;
+  background: var(--tint-3);
+  border: 1px solid var(--line);
+  border-radius: var(--pill);
+}
+
+.view-tab {
+  padding: 8px 18px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--text-dim);
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: var(--pill);
+  transition: color var(--dur) var(--ease-out), background var(--dur) var(--ease-out);
+}
+
+.view-tab:hover {
+  color: var(--text);
+}
+
+.view-tab.selected {
+  color: var(--on-citrus);
+  background: linear-gradient(140deg, var(--citrus), var(--citrus-deep));
+  box-shadow: var(--shadow-sm);
+}
+
+.view-tab:focus-visible {
+  outline: 2px solid var(--citrus-text);
+  outline-offset: 2px;
+}
+
+.codex-thumb-cell {
+  width: 64px;
+  padding: 5px !important;
 }
 
 /* ===== 结果与说明 ===== */
@@ -2196,6 +2359,20 @@ input[type='checkbox']:focus-visible {
 
   .card {
     padding: var(--space-4);
+  }
+
+  /* 窄屏两列，卡片格位相应压小 */
+  .codex-grid {
+    grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
+    gap: var(--space-3);
+  }
+
+  .view-switch {
+    flex: 1 1 100%;
+  }
+
+  .view-tab {
+    flex: 1;
   }
 
   .btn-lg {

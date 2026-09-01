@@ -172,6 +172,7 @@ pnpm start      # http://localhost:3000
 | `pnpm start` | 生产模式启动（server 托管 client/dist） |
 | `pnpm test` | 运行 shared 与 server 的 vitest 用例 |
 | `pnpm typecheck` | 全部包类型检查 |
+| `node scripts/build-portraits.mjs` | 重新生成角色立绘 webp（仅在替换源图后需要，见[立绘资源](#立绘资源)） |
 
 ### 环境变量
 
@@ -227,8 +228,24 @@ pnpm start      # http://localhost:3000
 
 - [`shared/src/characters.ts`](shared/src/characters.ts) —— 柚子社全 13 作共 167 位角色，字段取自萌娘百科
 - [`shared/src/divide.json`](shared/src/divide.json) —— 声优化名分组（同一位声优在不同作品的署名），用于「接近」判定
+- [`client/public/portraits/`](client/public/portraits) —— 角色立绘，166 位角色各两档 webp（`card/` 长边 400，`thumb/` 长边 128），按角色 id 命名
 
 猜测时若两个角色的 CV 是同一位声优的不同化名，声优列判为 🟨 接近；占位值 `无`（男主角）与 `未知` 不参与同人判定。
+
+### 立绘资源
+
+[`scripts/build-portraits.mjs`](scripts/build-portraits.mjs) 负责把立绘源图转成前端消费的 webp。源图目录 `yuz_char_img/`（按发售年份分子目录，文件名为角色中文名）不入库，脚本产物已提交，日常开发无需重跑。
+
+```bash
+pnpm --filter @yozu/shared build   # 脚本读取 shared/dist/characters.js
+node scripts/build-portraits.mjs
+```
+
+脚本按**角色中文名**匹配 `CHARACTERS` 取 id（源图目录年份与作品年份并不一致，不能按目录推断作品），先 trim 掉透明留白再缩放，同时生成 [`client/src/portraitIds.json`](client/src/portraitIds.json) 供前端判断某角色是否有立绘。任一文件名匹配不上角色时脚本会列出清单并非零退出。
+
+`香住纯`（管乐恋曲! 男主角）暂无立绘，图鉴对缺图角色渲染姓名首字占位。
+
+图鉴支持卡片与表格两种视图，切换状态存 localStorage：卡片视图用 `card` 档立绘，表格视图用 `thumb` 档。
 
 ## 项目结构
 
@@ -255,11 +272,14 @@ server/src
 client/src
 ├── api.ts           # fetch 封装与错误码
 ├── socket.ts        # socket.io-client 封装（ack Promise 化）
-├── storage.ts       # localStorage 持久化（房间 / 对局）
+├── storage.ts       # localStorage 持久化（房间 / 对局 / 主题 / 图鉴视图）
+├── portraits.ts     # 角色 id -> 立绘 URL
 ├── MetaContext.tsx  # 全局元数据
 ├── AuthContext.tsx  # 登录态与账号操作
-├── components/      # GuessBoard / GuessInputBar / Toast
+├── components/      # GuessBoard / GuessInputBar / Portrait / Toast
 └── pages/           # Home / Game / MultiLobby / MultiRoom / Codex / Rules / Login / Profile / Leaderboard
+scripts
+└── build-portraits.mjs  # 立绘源图 -> 两档 webp
 ```
 
 ## 致谢
